@@ -5,6 +5,8 @@ plugins {
     id 'application'
     // Apply the Maven publish plugin to publish resulting artefacts into a Maven repository
     id 'maven-publish'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.beryx.jlink' version '2.12.0'
 }
 
 group = externalGroup
@@ -60,4 +62,9 @@ repositories {
     jcenter()
     // Maven repository for the Database Systems courses
     maven { url "https://rychly-edu.gitlab.io/dbs/mvn-repo" }
+}
+
+javafx {
+    version = "13"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
 }

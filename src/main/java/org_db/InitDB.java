@@ -1,4 +1,4 @@
-package dbs.shape_builder;
+package org_db;
 
 import oracle.jdbc.OracleDriver;
 import oracle.jdbc.pool.OracleDataSource;
@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class App {
+public class InitDB {
 
     public static void main(String[] args) throws Exception {
         System.out.println("*** Oracle driver information ***");
