@@ -1,6 +1,7 @@
 package org.db;
 
 import oracle.jdbc.pool.OracleDataSource;
+import oracle.ord.im.OrdImage;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,9 +68,14 @@ public class InitDB {
                 }
                 System.out.println("*** SAVED IMAGES DONE ***");
 
-                // delete images from databases
-                Image.delete_image_from_db(conn, "car3.gif", "./images");
-                System.out.println("*** DELETE IMAGES DONE ***");
+                // delete images from database
+                Image.delete_image_from_db(conn, "car4.gif", "./images");
+                System.out.println("*** DELETE IMAGE DONE ***");
+
+                // load images from database
+                OrdImage load_image = Image.load_image_from_db(conn, "car1.gif", "./images");
+                load_image.getDataInFile("./src/load_image.gif");
+                System.out.println("*** LOAD IMAGE DONE ***");
 
             } catch (SQLException | Image.NotFoundException | IOException sqlEx) {
                 System.err.println("SQLException: " + sqlEx.getMessage());

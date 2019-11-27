@@ -13,6 +13,8 @@ import java.sql.SQLException;
 class Image {
     private String image_name;
     private String image_dir;
+    private static final String SQL_SELECT_IMAGE =
+            "SELECT image FROM Images WHERE image_name = ? AND image_dir = ?";
     private static final String SQL_SELECT_IMAGE_FOR_UPDATE =
             "SELECT image FROM Images WHERE image_name = ? AND image_dir = ? FOR UPDATE";
     private static final String SQL_INSERT_NEW_IMAGE =
@@ -71,18 +73,7 @@ class Image {
     }
 
     private OrdImage select_ord_image_for_update(Connection conn) throws NotFoundException, SQLException {
-        try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_IMAGE_FOR_UPDATE)) {
-            prepared_statement.setString(1, image_name);
-            prepared_statement.setString(2, image_dir);
-            try (ResultSet result_set = prepared_statement.executeQuery()) {
-                if (result_set.next()) {
-                    final OracleResultSet oracle_result_set = (OracleResultSet) result_set;
-                    return (OrdImage) oracle_result_set.getORAData(1, OrdImage.getORADataFactory());
-                } else {
-                    throw new NotFoundException();
-                }
-            }
-        }
+        return getOrdImage(conn, image_name, image_dir, SQL_SELECT_IMAGE_FOR_UPDATE);
     }
 
     private void recreate_still_image_data(Connection conn) throws  SQLException {
@@ -98,11 +89,34 @@ class Image {
         }
     }
 
-    public static void delete_image_from_db(Connection conn, String image_name, String image_dir) throws SQLException {
+    static void delete_image_from_db(Connection conn, String image_name, String image_dir) throws SQLException {
         try (PreparedStatement delete_prepared_statement = conn.prepareStatement(SQL_DELETE_IMAGE)) {
             delete_prepared_statement.setString(1, image_name);
             delete_prepared_statement.setString(2, image_dir);
             delete_prepared_statement.executeUpdate();
+        }
+    }
+
+    static OrdImage load_image_from_db(
+            Connection conn, String image_name, String image_dir) throws SQLException, NotFoundException
+    {
+        return getOrdImage(conn, image_name, image_dir, SQL_SELECT_IMAGE);
+    }
+
+    private static OrdImage getOrdImage(
+            Connection conn, String image_name, String image_dir, String sqlSelectImage
+    ) throws SQLException, NotFoundException {
+        try (PreparedStatement load_prepared_statement = conn.prepareStatement(sqlSelectImage)) {
+            load_prepared_statement.setString(1, image_name);
+            load_prepared_statement.setString(2, image_dir);
+            try (ResultSet result_set = load_prepared_statement.executeQuery()) {
+                if (result_set.next()) {
+                    final OracleResultSet oracle_result_set = (OracleResultSet) result_set;
+                    return (OrdImage) oracle_result_set.getORAData(1, OrdImage.getORADataFactory());
+                } else {
+                    throw new NotFoundException();
+                }
+            }
         }
     }
 
