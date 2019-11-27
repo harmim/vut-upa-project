@@ -6,16 +6,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import org_db.InitDB;
+import org.db.InitDB;
 
 
 public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        // check of correct functionality (temporary)
-        String[] toppings = {"Cheese", "Pepperoni", "Black Olives"};
-        InitDB.main(toppings);
+        InitDB.start();
 
         Parent root = FXMLLoader.load(getClass().getResource("scene.fxml"));
         

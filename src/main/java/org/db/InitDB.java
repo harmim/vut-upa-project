@@ -1,8 +1,9 @@
-package org_db;
+package org.db;
 
-import oracle.jdbc.OracleDriver;
 import oracle.jdbc.pool.OracleDataSource;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,10 +11,8 @@ import java.sql.Statement;
 
 public class InitDB {
 
-    public static void main(String[] args) throws Exception {
-        System.out.println("*** Oracle driver information ***");
-        OracleDriver.main(args);
-        System.out.println("*** Connecting to the Oracle db. and running a simple query ***");
+    public static void start() throws Exception {
+        System.out.println("*** STARTING INIT DB ***");
         try {
             // create a OracleDataSource instance
             OracleDataSource ods = new OracleDataSource();
@@ -31,6 +30,9 @@ public class InitDB {
             /**
              *
              */
+
+            saved_images_to_db(ods);
+
             // connect to the database
             try (Connection conn = ods.getConnection()) {
                 // create a Statement
@@ -50,5 +52,24 @@ public class InitDB {
             System.err.println("SQLException: " + sqlEx.getMessage());
         }
 
+    }
+
+    private static void saved_images_to_db(OracleDataSource ods) {
+        // connect to the database
+        File images_dir = new File("./images/");
+        File[] image_name_list = images_dir.listFiles();
+        if (image_name_list != null) {
+            int image_id = 0;
+            try (Connection conn = ods.getConnection()) {
+                // save images to database
+                for (File image_name : image_name_list) {
+                    Image image = new Image(image_id++);
+                    image.save_image_from_file_to_db(conn, image_name.getPath());
+                }
+                System.out.println("*** SAVED IMAGES DONE ***");
+            } catch (SQLException | Image.NotFoundException | IOException sqlEx) {
+                System.err.println("SQLException: " + sqlEx.getMessage());
+            }
+        }
     }
 }
