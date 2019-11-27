@@ -66,6 +66,11 @@ public class InitDB {
                     image.save_image_from_file_to_db(conn, image_name.getPath());
                 }
                 System.out.println("*** SAVED IMAGES DONE ***");
+
+                // delete images from databases
+                Image.delete_image_from_db(conn, "car3.gif", "./images");
+                System.out.println("*** DELETE IMAGES DONE ***");
+
             } catch (SQLException | Image.NotFoundException | IOException sqlEx) {
                 System.err.println("SQLException: " + sqlEx.getMessage());
             }

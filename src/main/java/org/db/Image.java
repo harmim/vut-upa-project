@@ -29,6 +29,8 @@ class Image {
                     "image_pc = SI_PositionalColor(image_si), " +
                     "image_tx = SI_Texture(image_si) " +
             "WHERE image_name = ? AND image_dir = ?";
+    private static final String SQL_DELETE_IMAGE =
+            "DELETE FROM Images WHERE image_name = ? AND image_dir = ?";
 
     Image(String name, String dir) {
         this.image_name = name;
@@ -93,6 +95,14 @@ class Image {
             si_meta_prepared_statement.setString(1, image_name);
             si_meta_prepared_statement.setString(2, image_dir);
             si_meta_prepared_statement.executeUpdate();
+        }
+    }
+
+    public static void delete_image_from_db(Connection conn, String image_name, String image_dir) throws SQLException {
+        try (PreparedStatement delete_prepared_statement = conn.prepareStatement(SQL_DELETE_IMAGE)) {
+            delete_prepared_statement.setString(1, image_name);
+            delete_prepared_statement.setString(2, image_dir);
+            delete_prepared_statement.executeUpdate();
         }
     }
 
