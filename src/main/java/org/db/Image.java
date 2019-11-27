@@ -11,28 +11,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 class Image {
-    private int image_id;
-    private static final String SQL_SELECT_IMAGE_FOR_UPDATE = "SELECT image FROM Images WHERE image_id = ? FOR UPDATE ";
+    private String image_name;
+    private String image_dir;
+    private static final String SQL_SELECT_IMAGE_FOR_UPDATE =
+            "SELECT image FROM Images WHERE image_name = ? AND image_dir = ? FOR UPDATE";
     private static final String SQL_INSERT_NEW_IMAGE =
-            "INSERT INTO Images (image_id, image) VALUES (?, ordsys.ordimage.init())";
-    private static final String SQL_UPDATE_IMAGE = "UPDATE Images SET image = ? WHERE image_id = ?";
+            "INSERT INTO Images (image_name, image_dir, image) VALUES (?, ?, ordsys.ordimage.init())";
+    private static final String
+            SQL_UPDATE_IMAGE = "UPDATE Images SET image = ? WHERE image_name = ? AND image_dir = ?";
     private static final String SQL_UPDATE_STILLIMAGE =
-            "UPDATE Images i SET i.image_si = SI_StillImage(i.image.getContent()) WHERE i.image_id = ?";
+            "UPDATE Images i SET i.image_si = SI_StillImage(i.image.getContent()) " +
+                    "WHERE i.image_name = ? AND i.image_dir = ?";
     private static final String SQL_UPDATE_STILLIMAGE_META =
             "UPDATE Images SET " +
                     "image_ac = SI_AverageColor(image_si), " +
                     "image_ch = SI_ColorHistogram(image_si), " +
                     "image_pc = SI_PositionalColor(image_si), " +
                     "image_tx = SI_Texture(image_si) " +
-            "WHERE image_id = ?";
+            "WHERE image_name = ? AND image_dir = ?";
 
-    /**
-     * Construct a new Image of the provided ID.
-     *
-     * @param image_id unique ID of image
-     */
-    Image(int image_id) {
-        this.image_id = image_id;
+    Image(String name, String dir) {
+        this.image_name = name;
+        this.image_dir = dir;
     }
 
     void save_image_from_file_to_db(
@@ -46,7 +46,8 @@ class Image {
                 ord_image = select_ord_image_for_update(conn);
             } catch (SQLException | NotFoundException e) {
                 try (PreparedStatement insert_prepared_statement = conn.prepareStatement(SQL_INSERT_NEW_IMAGE)) {
-                    insert_prepared_statement.setInt(1, image_id);
+                    insert_prepared_statement.setString(1, image_name);
+                    insert_prepared_statement.setString(2, image_dir);
                     insert_prepared_statement.executeUpdate();
                 }
                 ord_image = select_ord_image_for_update(conn);
@@ -57,7 +58,8 @@ class Image {
                 final OraclePreparedStatement oracle_prepared_statement =
                         (OraclePreparedStatement) update_prepared_statement;
                 oracle_prepared_statement.setORAData(1, ord_image);
-                update_prepared_statement.setInt(2, image_id);
+                update_prepared_statement.setString(2, image_name);
+                update_prepared_statement.setString(3, image_dir);
                 update_prepared_statement.executeUpdate();
             }
             recreate_still_image_data(conn);
@@ -68,7 +70,8 @@ class Image {
 
     private OrdImage select_ord_image_for_update(Connection conn) throws NotFoundException, SQLException {
         try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_IMAGE_FOR_UPDATE)) {
-            prepared_statement.setInt(1, image_id);
+            prepared_statement.setString(1, image_name);
+            prepared_statement.setString(2, image_dir);
             try (ResultSet result_set = prepared_statement.executeQuery()) {
                 if (result_set.next()) {
                     final OracleResultSet oracle_result_set = (OracleResultSet) result_set;
@@ -82,11 +85,13 @@ class Image {
 
     private void recreate_still_image_data(Connection conn) throws  SQLException {
         try (PreparedStatement si_prepared_statement = conn.prepareStatement(SQL_UPDATE_STILLIMAGE)) {
-            si_prepared_statement.setInt(1, image_id);
+            si_prepared_statement.setString(1, image_name);
+            si_prepared_statement.setString(2, image_dir);
             si_prepared_statement.executeUpdate();
         }
         try (PreparedStatement si_meta_prepared_statement = conn.prepareStatement(SQL_UPDATE_STILLIMAGE_META)) {
-            si_meta_prepared_statement.setInt(1, image_id);
+            si_meta_prepared_statement.setString(1, image_name);
+            si_meta_prepared_statement.setString(2, image_dir);
             si_meta_prepared_statement.executeUpdate();
         }
     }
