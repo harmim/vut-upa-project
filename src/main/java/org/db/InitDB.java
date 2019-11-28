@@ -63,17 +63,17 @@ public class InitDB {
             try (Connection conn = ods.getConnection()) {
                 // save images to database
                 for (File image_name : image_name_list) {
-                    Image image = new Image(image_name.getName(), image_name.getParent());
+                    Image image = new Image(0);
                     image.save_image_from_file_to_db(conn, image_name.getPath());
                 }
                 System.out.println("*** SAVED IMAGES DONE ***");
 
                 // delete images from database
-                Image.delete_image_from_db(conn, "car4.gif", "./images");
+                Image.delete_image_from_db(conn, 1);
                 System.out.println("*** DELETE IMAGE DONE ***");
 
                 // load images from database
-                OrdImage load_image = Image.load_image_from_db(conn, "car1.gif", "./images");
+                OrdImage load_image = Image.load_image_from_db(conn, 2);
                 load_image.getDataInFile("./src/load_image.gif");
                 System.out.println("*** LOAD IMAGE DONE ***");
 
