@@ -59,12 +59,12 @@ public class InitDB {
         // connect to the database
         File images_dir = new File("./images/");
         File[] image_name_list = images_dir.listFiles();
+        int image_id = 0;
         if (image_name_list != null) {
             try (Connection conn = ods.getConnection()) {
                 // save images to database
                 for (File image_name : image_name_list) {
-                    Image image = new Image(0);
-                    image.save_image_from_file_to_db(conn, image_name.getPath());
+                    image_id = Image.save_image_from_file_to_db(conn, 0, image_name.getPath());
                 }
                 System.out.println("*** SAVED IMAGES DONE ***");
 

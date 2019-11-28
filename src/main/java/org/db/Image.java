@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.sql.*;
 
 class Image {
-    private Integer image_id;
     private static final String SQL_SELECT_LAST_IMAGE_ID =
             "SELECT MAX(image_id) FROM Images";
     private static final String SQL_SELECT_IMAGE =
@@ -31,12 +30,8 @@ class Image {
     private static final String SQL_DELETE_IMAGE =
             "DELETE FROM Images WHERE image_id = ?";
 
-    Image(Integer id) {
-        this.image_id = id;
-    }
-
-    void save_image_from_file_to_db(
-            Connection conn, String filename) throws SQLException, NotFoundException, IOException
+    static int save_image_from_file_to_db(
+            Connection conn, Integer image_id, String filename) throws SQLException, NotFoundException, IOException
     {
         final boolean previous_auto_commit = conn.getAutoCommit();
         conn.setAutoCommit(false);
@@ -48,23 +43,28 @@ class Image {
                     image_id = get_last_image_id(conn);
                 }
             }
-            ord_image = select_ord_image_for_update(conn);
+            ord_image = select_ord_image_for_update(conn, image_id);
             ord_image.loadDataFromFile(filename);
-            ord_image.setProperties();
-            try (PreparedStatement update_prepared_statement = conn.prepareStatement(SQL_UPDATE_IMAGE)) {
-                final OraclePreparedStatement oracle_prepared_statement =
-                        (OraclePreparedStatement) update_prepared_statement;
-                oracle_prepared_statement.setORAData(1, ord_image);
-                update_prepared_statement.setInt(2, image_id);
-                update_prepared_statement.executeUpdate();
-            }
-            recreate_still_image_data(conn);
+            save_ord_image_to_db(conn, image_id, ord_image);
         } finally {
             conn.setAutoCommit(previous_auto_commit);
         }
+        return image_id;
     }
 
-    private int get_last_image_id(Connection conn) throws SQLException, NotFoundException{
+    private static void save_ord_image_to_db(Connection conn, Integer image_id, OrdImage ord_image) throws SQLException {
+        ord_image.setProperties();
+        try (PreparedStatement update_prepared_statement = conn.prepareStatement(SQL_UPDATE_IMAGE)) {
+            final OraclePreparedStatement oracle_prepared_statement =
+                    (OraclePreparedStatement) update_prepared_statement;
+            oracle_prepared_statement.setORAData(1, ord_image);
+            update_prepared_statement.setInt(2, image_id);
+            update_prepared_statement.executeUpdate();
+        }
+        recreate_still_image_data(conn, image_id);
+    }
+
+    private static int get_last_image_id(Connection conn) throws SQLException, NotFoundException{
         Statement statement = conn.createStatement();
         try (ResultSet result_set = statement.executeQuery(SQL_SELECT_LAST_IMAGE_ID)) {
             if (result_set.next()) {
@@ -76,11 +76,13 @@ class Image {
         }
     }
 
-    private OrdImage select_ord_image_for_update(Connection conn) throws NotFoundException, SQLException {
+    private static OrdImage select_ord_image_for_update(
+            Connection conn, Integer image_id) throws NotFoundException, SQLException
+    {
         return getOrdImage(conn, image_id, SQL_SELECT_IMAGE_FOR_UPDATE);
     }
 
-    private void recreate_still_image_data(Connection conn) throws  SQLException {
+    private static void recreate_still_image_data(Connection conn, Integer image_id) throws  SQLException {
         try (PreparedStatement si_prepared_statement = conn.prepareStatement(SQL_UPDATE_STILLIMAGE)) {
             si_prepared_statement.setInt(1, image_id);
             si_prepared_statement.executeUpdate();
@@ -119,14 +121,7 @@ class Image {
             }
         }
     }
-
-//    private static void convert_image_in_db(
-//            Connection conn, String image_name, String image_dir) throws NotFoundException, SQLException
-//    {
-//        OrdImage ord_image = load_image_from_db(conn, image_name, image_dir);
-//        ord_image.processCopy();
-//    }
-
+    
     static class NotFoundException extends Exception {
         // nothing to extend
     }
