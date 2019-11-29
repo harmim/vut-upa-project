@@ -26,9 +26,15 @@ class Image {
                     "image_ch = SI_ColorHistogram(image_si), " +
                     "image_pc = SI_PositionalColor(image_si), " +
                     "image_tx = SI_Texture(image_si) " +
-                    "WHERE image_id = ?";
+            "WHERE image_id = ?";
     private static final String SQL_DELETE_IMAGE =
             "DELETE FROM Images WHERE image_id = ?";
+    private static final String SQL_SELECT_SIMILAR_IMAGE =
+            "SELECT dst.image_id, SI_ScoreByFtrList(new SI_FeatureList(" +
+                    "src.image_ac,?,src.image_ch,?,src.image_pc,?,src.image_tx,?),dst.image_si) AS similarity " +
+            "FROM Images src, Images dst " +
+            "WHERE (src.image_id = ?) AND (src.image_id <> dst.image_id) " +
+            "ORDER BY similarity ASC";
 
     static int save_image_from_file_to_db(
             Connection conn, int image_id, String filename) throws SQLException, NotFoundException, IOException {
@@ -136,7 +142,7 @@ class Image {
 
     static void execute_processing_of_image(
             OrdImage ord_image, String op_code, double param1,double param2, double param3, double param4)
-            throws NotFoundException, SQLException
+            throws SQLException
     {
         switch (op_code) {
             case "rotate":
@@ -170,6 +176,26 @@ class Image {
                 break;
             default:
                 System.err.println("!!! Unknown trasformations string !!!");
+        }
+    }
+
+    public static int find_most_similar_image(
+            Connection conn, int image_id, double ac_weight, double ch_weight, double pc_weight, double tx_weight)
+            throws SQLException, NotFoundException
+    {
+        try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_SIMILAR_IMAGE)) {
+            prepared_statement.setDouble(1, ac_weight);
+            prepared_statement.setDouble(2, ch_weight);
+            prepared_statement.setDouble(3, pc_weight);
+            prepared_statement.setDouble(4, tx_weight);
+            prepared_statement.setInt(5, image_id);
+            try (ResultSet result_set = prepared_statement.executeQuery()) {
+                if (result_set.next()) {
+                    return result_set.getInt(1);
+                } else {
+                    throw new NotFoundException();
+                }
+            }
         }
     }
 

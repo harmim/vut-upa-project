@@ -79,8 +79,9 @@ public class InitDB {
                 Image.process_image_in_db(conn, 3, "scale", 2.25, 0.0, 0.0, 0.0);
                 Image.process_image_in_db(conn, 3, "monochrome", 0.0, 0.0, 0.0, 0.0);
 
-                // load images from database
-                OrdImage load_image = Image.load_image_from_db(conn, 3);
+                // load most similiar imags from database
+                int sim_image_id = Image.find_most_similar_image(conn, 3, 0.3, 0.3, 0.1, 0.3);
+                OrdImage load_image = Image.load_image_from_db(conn, sim_image_id);
                 load_image.getDataInFile("./src/load_image.gif");
                 System.out.println("*** LOAD IMAGE DONE ***");
 
