@@ -1,4 +1,4 @@
-package org.openjfx;
+package upa.openjfx;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

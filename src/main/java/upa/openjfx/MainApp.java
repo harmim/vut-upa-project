@@ -1,4 +1,4 @@
-package org.openjfx;
+package upa.openjfx;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -6,7 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import org.db.InitDB;
+import upa.db.InitDB;
 
 
 public class MainApp extends Application {

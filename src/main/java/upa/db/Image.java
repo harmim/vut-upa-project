@@ -1,4 +1,4 @@
-package org.db;
+package upa.db;
 
 import oracle.jdbc.OraclePreparedStatement;
 import oracle.jdbc.OracleResultSet;
