@@ -72,8 +72,15 @@ public class InitDB {
                 Image.delete_image_from_db(conn, 1);
                 System.out.println("*** DELETE IMAGE DONE ***");
 
+                // change images in db
+                Image.process_image_in_db(conn, 3, "rotate", 90.0, 0.0, 0.0, 0.0);
+                Image.process_image_in_db(conn, 3, "cut", 0.0, 0.0, 200.0, 200.0);
+                Image.process_image_in_db(conn, 3, "mirror", 0.0, 0.0, 0.0, 0.0);
+                Image.process_image_in_db(conn, 3, "scale", 2.25, 0.0, 0.0, 0.0);
+                Image.process_image_in_db(conn, 3, "monochrome", 0.0, 0.0, 0.0, 0.0);
+
                 // load images from database
-                OrdImage load_image = Image.load_image_from_db(conn, 2);
+                OrdImage load_image = Image.load_image_from_db(conn, 3);
                 load_image.getDataInFile("./src/load_image.gif");
                 System.out.println("*** LOAD IMAGE DONE ***");
 

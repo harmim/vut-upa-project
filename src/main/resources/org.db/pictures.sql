@@ -17,21 +17,4 @@ CREATE TABLE Images (
     image_tx ORDSYS.SI_Texture
 );
 
-ALTER TABLE Images ADD CONSTRAINT pk_image_id PRIMARY KEY(image_id);;
-
--- trigger to generate 'SI_StillImage' and its corresponding SI metadata for each inserted or updated ORDImage value
-CREATE OR REPLACE TRIGGER generate_image_features
-    AFTER INSERT OR UPDATE OF image on Images
-    FOR EACH ROW
-DECLARE
-    si ORDSYS.SI_StillImage;
-    BEGIN
-        si := new SI_StillImage(:NEW.image.getContent());
-        UPDATE Images i SET image_si = si,
-        image_ac = SI_AverageColor(si),
-        image_ch = SI_ColorHistogram(si),
-        image_pc = SI_PositionalColor(si),
-        image_tx = SI_Texture(si)
-        WHERE i.image_id = :NEW.image_id;
-END;
-/
+ALTER TABLE Images ADD CONSTRAINT pk_image_id PRIMARY KEY(image_id);
