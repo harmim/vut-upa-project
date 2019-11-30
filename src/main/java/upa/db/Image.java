@@ -7,7 +7,7 @@ import oracle.ord.im.OrdImage;
 import java.io.IOException;
 import java.sql.*;
 
-class Image {
+class Image extends GeneralDB {
     private static final String SQL_SELECT_LAST_IMAGE_ID =
             "SELECT MAX(image_id) FROM Images";
     private static final String SQL_SELECT_IMAGE =
@@ -45,7 +45,7 @@ class Image {
             if (image_id == 0) { // new image
                 try (PreparedStatement insert_prepared_statement = conn.prepareStatement(SQL_INSERT_NEW_IMAGE)) {
                     insert_prepared_statement.executeUpdate();
-                    image_id = get_last_image_id(conn);
+                    image_id = get_last_inserted_id(conn, SQL_SELECT_LAST_IMAGE_ID);
                 }
             }
             ord_image = select_ord_image_for_update(conn, image_id);
@@ -69,18 +69,6 @@ class Image {
         recreate_still_image_data(conn, image_id);
     }
 
-    private static int get_last_image_id(Connection conn) throws SQLException, NotFoundException {
-        Statement statement = conn.createStatement();
-        try (ResultSet result_set = statement.executeQuery(SQL_SELECT_LAST_IMAGE_ID)) {
-            if (result_set.next()) {
-                final OracleResultSet oracle_result_set = (OracleResultSet) result_set;
-                return oracle_result_set.getInt(1);
-            } else {
-                throw new NotFoundException();
-            }
-        }
-    }
-
     private static OrdImage select_ord_image_for_update(
             Connection conn, int image_id) throws NotFoundException, SQLException {
         return getOrdImage(conn, image_id, SQL_SELECT_IMAGE_FOR_UPDATE);
@@ -98,10 +86,7 @@ class Image {
     }
 
     static void delete_image_from_db(Connection conn, int image_id) throws SQLException {
-        try (PreparedStatement delete_prepared_statement = conn.prepareStatement(SQL_DELETE_IMAGE)) {
-            delete_prepared_statement.setInt(1, image_id);
-            delete_prepared_statement.executeUpdate();
-        }
+        delete_object_from_db(conn, SQL_DELETE_IMAGE, image_id);
     }
 
     static OrdImage load_image_from_db(

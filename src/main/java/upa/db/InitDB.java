@@ -27,13 +27,15 @@ public class InitDB {
             ods.setUser(System.getProperty("login"));
             ods.setPassword(System.getProperty("password"));
 
-            saved_images_to_db(ods);
+            save_images_to_db(ods);
+            save_object_to_db(ods);
+
         } catch (SQLException sqlEx) {
             System.err.println("SQLException: " + sqlEx.getMessage());
         }
     }
 
-    private static void saved_images_to_db(OracleDataSource ods) {
+    private static void save_images_to_db(OracleDataSource ods) {
         // connect to the database
         File images_dir = new File("./images/");
         File[] image_name_list = images_dir.listFiles();
@@ -65,6 +67,17 @@ public class InitDB {
             } catch (SQLException | Image.NotFoundException | IOException sqlEx) {
                 System.err.println("SQLException: " + sqlEx.getMessage());
             }
+        }
+    }
+
+    private static void save_object_to_db(OracleDataSource ods) throws Exception {
+        try (Connection conn = ods.getConnection()) {
+            Rectangle.update_geometry_in_db(conn, 1, new double[]{200, 200, 300,300});
+            Rectangle.insert_new_to_db(conn, "Z", "House", new double[]{20, 20, 120,120});
+            SpatialObject.delete_spatial_object_from_db(conn, 2);
+            Rectangle.insert_new_to_db(conn, "X", "Building", new double[]{20, 20, 120,120});
+        } catch (SQLException | IOException sqlEx) {
+            System.err.println("SQLException: " + sqlEx.getMessage());
         }
     }
 }
