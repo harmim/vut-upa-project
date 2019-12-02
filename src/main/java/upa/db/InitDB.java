@@ -27,7 +27,7 @@ public class InitDB {
             ods.setUser(System.getProperty("login"));
             ods.setPassword(System.getProperty("password"));
 
-            save_images_to_db(ods);
+//            save_images_to_db(ods);
             save_object_to_db(ods);
 
         } catch (SQLException sqlEx) {
@@ -72,10 +72,17 @@ public class InitDB {
 
     private static void save_object_to_db(OracleDataSource ods) throws Exception {
         try (Connection conn = ods.getConnection()) {
-            Rectangle.update_geometry_in_db(conn, 1, new double[]{200, 200, 300,300});
-            Rectangle.insert_new_to_db(conn, "Z", "House", new double[]{20, 20, 120,120});
-            SpatialObject.delete_spatial_object_from_db(conn, 2);
-            Rectangle.insert_new_to_db(conn, "X", "Building", new double[]{20, 20, 120,120});
+            // rectangle
+            Rectangle.update_geometry_in_db(conn, 1, new double[]{200,200, 300,300});
+            Rectangle.insert_new_to_db(conn, "Z", "House", new double[]{20,20, 120,120});
+            SpatialObject.delete_spatial_object_from_db(conn, 3);
+            Rectangle.insert_new_to_db(conn, "X", "Building", new double[]{20,20, 120,120});
+
+            // line-string
+            StraightLineString.update_geometry_in_db(conn, 2, new double[]{130,35,  180,45, 205,25, 250,55});
+            StraightLineString.insert_new_to_db(
+                    conn, "K", "Kine", new double[]{130,65,  180,75, 205,55, 250,85}
+            );
         } catch (SQLException | IOException sqlEx) {
             System.err.println("SQLException: " + sqlEx.getMessage());
         }

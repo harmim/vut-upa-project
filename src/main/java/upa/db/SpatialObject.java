@@ -7,19 +7,40 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Struct;
 
+class StraightLineString extends SpatialObject {
+    // line-string
+    private static final int SDO_GTYPE = 2;
+    // set the line-string's vertices as connected by straight line segments
+    private static final int SDO_INTERPRETATION = 1;
+
+    private static JGeometry create_geometry(double[] points) {
+        return new JGeometry(
+            JGeometry.GTYPE_CURVE, SpatialObject.SDO_SRID,
+            new int[]{SpatialObject.SDO_STARTING_OFFSET, SDO_GTYPE, SDO_INTERPRETATION},
+            points
+        );
+    }
+
+    public static void update_geometry_in_db(Connection conn, int o_id, double[] points) throws Exception {
+        update_geometry_of_object(conn, o_id, create_geometry(points));
+    }
+
+    public static int insert_new_to_db(Connection conn, String o_name, String o_type, double[] points) throws Exception {
+        return insert_new_object_to_db(conn, o_name, o_type, create_geometry(points));
+    }
+}
+
 class Rectangle extends SpatialObject {
-    // the geometry is in Cartesian (local) coordinates
-    private static final int SDO_SRID = 0;
     // exterior polygon ring
-    private static final int SDO_ETYPE = 1003;
-    // the offset within the SDO_ORDINATES array where the first ordinate for this element is stored
-    private static final int SDO_STARTING_OFFSET = 1;
+    private static final int SDO_GTYPE = 1003;
     // rectangle given by given by its lower-left corner and the upper-right corner
     private static final int SDO_INTERPRETATION = 3;
 
-    private static JGeometry create_geometry( double[] points) {
+    private static JGeometry create_geometry(double[] points) {
         return new JGeometry(
-                JGeometry.GTYPE_POLYGON, SDO_SRID, new int[]{SDO_STARTING_OFFSET, SDO_ETYPE, SDO_INTERPRETATION}, points
+                JGeometry.GTYPE_POLYGON, SpatialObject.SDO_SRID,
+                new int[]{SpatialObject.SDO_STARTING_OFFSET, SDO_GTYPE, SDO_INTERPRETATION},
+                points
         );
     }
 
@@ -33,6 +54,11 @@ class Rectangle extends SpatialObject {
 }
 
 public class SpatialObject extends GeneralDB {
+    // the geometry is in Cartesian (local) coordinates
+    protected static final int SDO_SRID = 0;
+    // the offset within the SDO_ORDINATES array where the first ordinate for this element is stored
+    protected static final int SDO_STARTING_OFFSET = 1;
+
     private static final String SQL_UPDATE_GEOMETRY_OF_OBJECT = "UPDATE Village set geometry = ? WHERE o_id = ?";
     private static final String SQL_INSERT_NEW_OBJECT =
             "INSERT INTO Village (o_name, o_type, geometry) VALUES (?, ?, ?)";
