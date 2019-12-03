@@ -81,7 +81,7 @@ public class InitDB {
 //            Rectangle.insert_new_to_db(conn, "X", "Building", new double[]{20,20, 120,120});
 
             Circle.insert_new_to_db(conn, "C", "Circle", new double[]{15.0, 15.0, 5.0});
-            Circle.update_geometry_in_db(conn, 4, new double[]{20.00,20.00, 10.0});
+            Circle.update_geometry_in_db(conn, 4, new double[]{20.00, 20.00, 10.0});
 
 //            // line-string
 //            StraightLineString.update_geometry_in_db(conn, 2, new double[]{130,35,  180,45, 205,25, 250,55});
@@ -98,7 +98,7 @@ public class InitDB {
             circles1.compute_coordinates_of_disjoint_circles(8.0, 5, 50.0, 65, false);
             circles1.insert_new_to_db(conn, "G-circles", "trees");
 
-            double[][] circles_info = new double[][] {
+            double[][] circles_info = new double[][]{
                     {0, 0, 5},
                     {5, 5, 5},
                     {10, 10, 5},

@@ -33,8 +33,7 @@ public class CircleCollection extends SpatialObject {
     }
 
     public void compute_coordinates_of_disjoint_circles(
-            double r, int n, double x_start, double y_start, boolean horizontal)
-    {
+            double r, int n, double x_start, double y_start, boolean horizontal) {
         int current_offset = 1;
         int num_of_points_in_level = 3;
         for (int i = 0; i < n; i++) {
@@ -72,8 +71,7 @@ public class CircleCollection extends SpatialObject {
     }
 
     public static void delete_circle_from_collection(
-            Connection conn, int o_id, int[] image_ids) throws Exception
-    {
+            Connection conn, int o_id, int[] image_ids) throws Exception {
         Arrays.sort(image_ids);
         int removed_images = 0;
         JGeometry geometry = select_geometry_for_update(conn, o_id);
@@ -125,8 +123,7 @@ public class CircleCollection extends SpatialObject {
     }
 
     private static JGeometry select_geometry_for_update(
-            Connection conn, int o_id) throws SQLException, NotFoundException
-    {
+            Connection conn, int o_id) throws SQLException, NotFoundException {
         try (PreparedStatement prepare_statement = conn.prepareStatement(SQL_SELECT_GEOMETRY_FOR_UPDATE)) {
             prepare_statement.setInt(1, o_id);
             try (ResultSet result_set = prepare_statement.executeQuery()) {

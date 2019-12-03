@@ -7,8 +7,7 @@ import java.sql.*;
 public class GeneralDB {
 
     protected static int get_last_inserted_id(
-            Connection conn, String sql_select) throws SQLException, NotFoundException
-    {
+            Connection conn, String sql_select) throws SQLException, NotFoundException {
         Statement statement = conn.createStatement();
         try (ResultSet result_set = statement.executeQuery(sql_select)) {
             if (result_set.next()) {

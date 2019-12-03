@@ -27,15 +27,15 @@ public class Image extends GeneralDB {
                     "image_ch = SI_ColorHistogram(image_si), " +
                     "image_pc = SI_PositionalColor(image_si), " +
                     "image_tx = SI_Texture(image_si) " +
-            "WHERE image_id = ?";
+                    "WHERE image_id = ?";
     private static final String SQL_DELETE_IMAGE =
             "DELETE FROM Images WHERE image_id = ?";
     private static final String SQL_SELECT_SIMILAR_IMAGE =
             "SELECT dst.image_id, SI_ScoreByFtrList(new SI_FeatureList(" +
                     "src.image_ac,?,src.image_ch,?,src.image_pc,?,src.image_tx,?),dst.image_si) AS similarity " +
-            "FROM Images src, Images dst " +
-            "WHERE (src.image_id = ?) AND (src.image_id <> dst.image_id) " +
-            "ORDER BY similarity ASC";
+                    "FROM Images src, Images dst " +
+                    "WHERE (src.image_id = ?) AND (src.image_id <> dst.image_id) " +
+                    "ORDER BY similarity ASC";
 
     public static int save_image_from_file_to_db(
             Connection conn, int image_id, String filename) throws SQLException, NotFoundException, IOException {
@@ -113,8 +113,7 @@ public class Image extends GeneralDB {
 
     public static void process_image_in_db(
             Connection conn, int image_id, String op_code, double param1, double param2, double param3, double param4)
-            throws NotFoundException, SQLException
-    {
+            throws NotFoundException, SQLException {
         final boolean previous_auto_commit = conn.getAutoCommit();
         conn.setAutoCommit(false);
         try {
@@ -127,9 +126,8 @@ public class Image extends GeneralDB {
     }
 
     static void execute_processing_of_image(
-            OrdImage ord_image, String op_code, double param1,double param2, double param3, double param4)
-            throws SQLException
-    {
+            OrdImage ord_image, String op_code, double param1, double param2, double param3, double param4)
+            throws SQLException {
         switch (op_code) {
             case "rotate":
                 // param1 - angle (optimal values are 90, 180 and 270)
@@ -167,8 +165,7 @@ public class Image extends GeneralDB {
 
     public static int find_most_similar_image(
             Connection conn, int image_id, double ac_weight, double ch_weight, double pc_weight, double tx_weight)
-            throws SQLException, NotFoundException
-    {
+            throws SQLException, NotFoundException {
         try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_SIMILAR_IMAGE)) {
             prepared_statement.setDouble(1, ac_weight);
             prepared_statement.setDouble(2, ch_weight);

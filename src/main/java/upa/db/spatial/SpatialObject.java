@@ -18,8 +18,7 @@ public class SpatialObject extends GeneralDB {
     private static final String SQL_DELETE_OBJECT = "DELETE FROM Village WHERE o_id = ?";
 
     protected static void update_geometry_of_object(
-            Connection conn, int o_id, JGeometry j_geom) throws Exception
-    {
+            Connection conn, int o_id, JGeometry j_geom) throws Exception {
         try (PreparedStatement prepare_statement = conn.prepareStatement(SQL_UPDATE_GEOMETRY_OF_OBJECT)) {
             Struct obj = JGeometry.storeJS(conn, j_geom);
             prepare_statement.setObject(1, obj);
