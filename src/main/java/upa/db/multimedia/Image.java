@@ -1,13 +1,14 @@
-package upa.db;
+package upa.db.multimedia;
 
 import oracle.jdbc.OraclePreparedStatement;
 import oracle.jdbc.OracleResultSet;
 import oracle.ord.im.OrdImage;
+import upa.db.GeneralDB;
 
 import java.io.IOException;
 import java.sql.*;
 
-class Image extends GeneralDB {
+public class Image extends GeneralDB {
     private static final String SQL_SELECT_LAST_IMAGE_ID =
             "SELECT MAX(image_id) FROM Images";
     private static final String SQL_SELECT_IMAGE =
@@ -36,7 +37,7 @@ class Image extends GeneralDB {
             "WHERE (src.image_id = ?) AND (src.image_id <> dst.image_id) " +
             "ORDER BY similarity ASC";
 
-    static int save_image_from_file_to_db(
+    public static int save_image_from_file_to_db(
             Connection conn, int image_id, String filename) throws SQLException, NotFoundException, IOException {
         final boolean previous_auto_commit = conn.getAutoCommit();
         conn.setAutoCommit(false);
@@ -85,11 +86,11 @@ class Image extends GeneralDB {
         }
     }
 
-    static void delete_image_from_db(Connection conn, int image_id) throws SQLException {
+    public static void delete_image_from_db(Connection conn, int image_id) throws SQLException {
         delete_object_from_db(conn, SQL_DELETE_IMAGE, image_id);
     }
 
-    static OrdImage load_image_from_db(
+    public static OrdImage load_image_from_db(
             Connection conn, int image_id) throws SQLException, NotFoundException {
         return getOrdImage(conn, image_id, SQL_SELECT_IMAGE);
     }
@@ -110,7 +111,7 @@ class Image extends GeneralDB {
         }
     }
 
-    static void process_image_in_db(
+    public static void process_image_in_db(
             Connection conn, int image_id, String op_code, double param1, double param2, double param3, double param4)
             throws NotFoundException, SQLException
     {
@@ -182,9 +183,5 @@ class Image extends GeneralDB {
                 }
             }
         }
-    }
-
-    static class NotFoundException extends Exception {
-        // nothing to extend
     }
 }

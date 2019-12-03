@@ -38,6 +38,7 @@ publishing {
 }
 
 dependencies {
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
     compile group: 'org.apache.ibatis', name: 'ibatis-core', version: '3.0'
     // Oracle JDBC for Java 8
     compile group: 'com.oracle.weblogic', name: 'ojdbc8', version:'18.3.0.0.0'
