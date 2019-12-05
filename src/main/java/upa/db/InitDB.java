@@ -81,11 +81,10 @@ public class InitDB {
       Circle.update_geometry_in_db(conn, 3, new double[] {20.00, 20.00, 10.0});
 
       //            // line-string
-      //            StraightLineString.update_geometry_in_db(conn, 2, new double[]{130,35,  180,45,
-      // 205,25, 250,55});
-      //            StraightLineString.insert_new_to_db(
-      //                    conn, "K", "Kine", new double[]{130,65,  180,75, 205,55, 250,85}
-      //            );
+      StraightLineString.insert_new_to_db(
+          conn, "K", "Kine", new double[] {130, 65, 180, 75, 205, 55, 250, 85, 275, 45});
+      StraightLineString.delete_points_from_line_string(conn, 4, new double[] {180, 75, 130, 65});
+      StraightLineString.add_points_to_line_string(conn, 4, new double[] {300, 50, 250, 90});
 
       // circles
       CircleCollection.insert_new_collection_to_db(
@@ -98,22 +97,22 @@ public class InitDB {
       Circle.insert_new_to_db(conn, "B1", "bushes1", new double[] {5, 5, 5});
       Circle.insert_new_to_db(conn, "B1", "bushes1", new double[] {10, 10, 5});
 
-      CircleCollection.delete_object_from_collection(conn, 5, new int[] {0, 4}, 6);
-      CircleCollection.update_geometry_of_collection(conn, 5, 15, 10, 75);
-      CircleCollection.add_circles_to_collection(conn, 5, new int[] {0, 4});
-      CircleCollection.update_geometry_of_collection(conn, 5, 15, 10, 97.5);
-      CircleCollection.add_circles_to_collection(conn, 5, new int[] {-1});
-      CircleCollection.delete_object_from_collection(conn, 5, new int[] {0}, 6);
-      CircleCollection.add_circles_to_collection(conn, 5, new int[] {0, 6});
-      CircleCollection.delete_object_from_collection(conn, 5, new int[] {6, 1}, 6);
+      CircleCollection.delete_object_from_collection(conn, 6, new int[] {0, 4}, 6);
+      CircleCollection.update_geometry_of_collection(conn, 6, 15, 10, 75);
+      CircleCollection.add_circles_to_collection(conn, 6, new int[] {0, 4});
+      CircleCollection.update_geometry_of_collection(conn, 6, 15, 10, 97.5);
+      CircleCollection.add_circles_to_collection(conn, 6, new int[] {-1});
+      CircleCollection.delete_object_from_collection(conn, 6, new int[] {0}, 6);
+      CircleCollection.add_circles_to_collection(conn, 6, new int[] {0, 6});
+      CircleCollection.delete_object_from_collection(conn, 6, new int[] {6, 1}, 6);
 
-      CircleCollection.delete_object_from_collection(conn, 4, new int[] {2, 3}, 6);
-      CircleCollection.update_geometry_of_collection(conn, 4, 15, 35, 100);
-      CircleCollection.add_circles_to_collection(conn, 4, new int[] {2, 3});
-      CircleCollection.update_geometry_of_collection(conn, 4, 15, 52.5, 100);
-      CircleCollection.add_circles_to_collection(conn, 4, new int[] {-1});
-      CircleCollection.add_circles_to_collection(conn, 4, new int[] {6});
-      CircleCollection.delete_object_from_collection(conn, 4, new int[] {2, 4}, 6);
+      CircleCollection.delete_object_from_collection(conn, 5, new int[] {2, 3}, 6);
+      CircleCollection.update_geometry_of_collection(conn, 5, 15, 35, 100);
+      CircleCollection.add_circles_to_collection(conn, 5, new int[] {2, 3});
+      CircleCollection.update_geometry_of_collection(conn, 5, 15, 52.5, 100);
+      CircleCollection.add_circles_to_collection(conn, 5, new int[] {-1});
+      CircleCollection.add_circles_to_collection(conn, 5, new int[] {6});
+      CircleCollection.delete_object_from_collection(conn, 5, new int[] {2, 4}, 6);
 
       // multipoint
       MultiPoint.insert_new_multipoint_to_db(
@@ -121,8 +120,8 @@ public class InitDB {
           "M",
           "MultiPoint",
           new double[] {25.0, 35.0, 35.0, 35.0, 45.0, 35.0, 25.0, 60.0, 35.0, 60.0, 45.0, 60.0});
-      MultiPoint.delete_object_from_collection(conn, 9, new int[] {1, 5}, 2);
-      MultiPoint.add_point_to_multipoint(conn, 9, new double[][] {{35.0, 35.0}, {45.0, 60.0}});
+      MultiPoint.delete_object_from_collection(conn, 10, new int[] {1, 5}, 2);
+      MultiPoint.add_point_to_multipoint(conn, 10, new double[][] {{35.0, 35.0}, {45.0, 60.0}});
     } catch (SQLException | IOException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
     }
