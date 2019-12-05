@@ -8,25 +8,23 @@ import javafx.stage.Stage;
 
 import upa.db.InitDB;
 
-
 public class MainApp extends Application {
 
-    @Override
-    public void start(Stage stage) throws Exception {
-        InitDB.start();
+  @Override
+  public void start(Stage stage) throws Exception {
+    InitDB.start();
 
-        Parent root = FXMLLoader.load(getClass().getResource("scene.fxml"));
-        
-        Scene scene = new Scene(root);
-        scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
-        
-        stage.setTitle("JavaFX and Gradle");
-        stage.setScene(scene);
-        stage.show();
-    }
+    Parent root = FXMLLoader.load(getClass().getResource("scene.fxml"));
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+    Scene scene = new Scene(root);
+    scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
 
+    stage.setTitle("JavaFX and Gradle");
+    stage.setScene(scene);
+    stage.show();
+  }
+
+  public static void main(String[] args) {
+    launch(args);
+  }
 }

@@ -1,5 +1,6 @@
 -- drop tables
-DROP TABLE Village;
+DROP TABLE Village CASCADE CONSTRAINTS;
+DROP TABLE CircleCollection CASCADE CONSTRAINTS;
 
 -- create the Village table
 CREATE TABLE Village (
@@ -9,14 +10,25 @@ CREATE TABLE Village (
     geometry SDO_GEOMETRY
 );
 
--- set the PRIMARY KEY for Village table
+CREATE TABLE CircleCollection (
+    c_id INTEGER NOT NULL,
+    x_start BINARY_DOUBLE NOT NULL,
+    y_start BINARY_DOUBLE NOT NULL,
+    n INTEGER NOT NULL
+);
+
+-- set the PRIMARY KEY for Village and CircleCollections tables
 ALTER TABLE Village ADD CONSTRAINT pk_o_id PRIMARY KEY(o_id);
+ALTER TABLE CircleCollection ADD CONSTRAINT pk_c_id PRIMARY KEY(c_id);
+
+-- set the FOREIGN KEY for CicleCollection table
+ALTER TABLE CircleCollection ADD CONSTRAINT fk_c_id FOREIGN KEY (c_id) REFERENCES Village(o_id);
 
 DELETE FROM USER_SDO_GEOM_METADATA WHERE
-    TABLE_NAME = 'CITY' AND COLUMN_NAME = 'GEOMETRY';
+    TABLE_NAME = 'Village' AND COLUMN_NAME = 'GEOMETRY';
 
 INSERT INTO USER_SDO_GEOM_METADATA VALUES (
-    'City', 'geometry',
+    'Village', 'geometry',
     -- X axis in range 0-750, Y axis in range 0-500, both with accurancy 0.1 points
     SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', 0, 750, 0.1), SDO_DIM_ELEMENT('Y', 0, 500, 0.1)),
     -- a local spatial reference system (not geographical; analytical functions will be without units)

@@ -1,0 +1,65 @@
+package upa.db.spatial;
+
+import oracle.spatial.geometry.JGeometry;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.sql.*;
+import java.util.Arrays;
+
+public class Collection extends SpatialObject {
+  private static final int ELEMENT_INFO_LENGTH = 3;
+  private static final String SQL_SELECT_GEOMETRY_FOR_UPDATE =
+      "SELECT geometry FROM Village WHERE o_id = ?";
+
+  public static void delete_object_from_collection(
+      Connection conn, int o_id, int[] o_idxs, int o_length) throws Exception {
+    Arrays.sort(o_idxs);
+    int removed_objects = 0;
+    JGeometry geometry = select_geometry_for_update(conn, o_id);
+    int[] elem_info = geometry.getElemInfo();
+    double[] ord_array = geometry.getOrdinatesArray();
+    for (int object_idx : o_idxs) {
+      elem_info = delete_elements_from_elem_info(elem_info, object_idx - removed_objects, o_length);
+      ord_array = delete_elements_from_array(ord_array, object_idx - removed_objects, o_length);
+      removed_objects += 1;
+    }
+    JGeometry new_geometry =
+        new JGeometry(geometry.getType(), geometry.getSRID(), elem_info, ord_array);
+    update_geometry_of_object(conn, o_id, new_geometry);
+  }
+
+  private static int[] delete_elements_from_elem_info(int[] elem_info, int o_idxs, int o_length) {
+    for (int i = 0; i < ELEMENT_INFO_LENGTH; i++) {
+      elem_info = ArrayUtils.remove(elem_info, o_idxs * ELEMENT_INFO_LENGTH);
+    }
+    int i = o_idxs * ELEMENT_INFO_LENGTH;
+    while (i < elem_info.length) {
+      elem_info[i] -= o_length;
+      i += ELEMENT_INFO_LENGTH;
+    }
+    return elem_info;
+  }
+
+  private static double[] delete_elements_from_array(double[] elem_info, int o_idxs, int o_length) {
+    for (int i = 0; i < o_length; i++) {
+      elem_info = ArrayUtils.remove(elem_info, o_idxs * o_length);
+    }
+    return elem_info;
+  }
+
+  protected static JGeometry select_geometry_for_update(Connection conn, int o_id)
+      throws SQLException, NotFoundException {
+    try (PreparedStatement prepare_statement =
+        conn.prepareStatement(SQL_SELECT_GEOMETRY_FOR_UPDATE)) {
+      prepare_statement.setInt(1, o_id);
+      try (ResultSet result_set = prepare_statement.executeQuery()) {
+        if (result_set.next()) {
+          Struct obj = (Struct) result_set.getObject(1);
+          return JGeometry.loadJS(obj);
+        } else {
+          throw new NotFoundException();
+        }
+      }
+    }
+  }
+}
