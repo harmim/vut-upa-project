@@ -3,10 +3,7 @@ package upa.db;
 import oracle.jdbc.pool.OracleDataSource;
 import oracle.ord.im.OrdImage;
 import upa.db.multimedia.Image;
-import upa.db.spatial.Circle;
-import upa.db.spatial.CircleCollection;
-import upa.db.spatial.MultiPoint;
-import upa.db.spatial.StraightLineString;
+import upa.db.spatial.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -127,6 +124,9 @@ public class InitDB {
       MultiPoint.add_points_to_multipoint(conn, 10, new double[] {35.0, 35.0, 45.0, 60.0});
       MultiPoint.add_points_to_multipoint(conn, 10, new double[] {55.0, 60.0, 55.0, 35.0});
       MultiPoint.delete_points_from_multipoint(conn, 10, new double[] {25.0, 35.0, 35.0, 60.0});
+
+      Point.insert_new_point(conn, "PPP", "PPPoint", new double[] {200,200});
+      Point.update_geometry_of_point(conn, 11, new double[] {150, 175});
     } catch (SQLException | IOException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
     }

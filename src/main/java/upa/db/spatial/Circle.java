@@ -8,7 +8,6 @@ public class Circle extends SpatialObject {
   // exterior polygon ring
   private static final int SDO_ETYPE = 1003;
   // circle type described by three distinct non-colinear points, all on the circumference of the
-  // circle
   protected static final int SDO_INTERPRETATION = 4;
 
   public static double[] get_sdo_points(double x_start, double y_start, double r) {
