@@ -1,7 +1,6 @@
 package upa.db.spatial;
 
 import oracle.spatial.geometry.JGeometry;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.sql.Connection;
 
@@ -20,41 +19,23 @@ public class StraightLineString extends Collection {
         points);
   }
 
-  public static void update_geometry_in_db(Connection conn, int o_id, double[] points)
+  public static void update_geometry_of_line_string(Connection conn, int o_id, double[] points)
       throws Exception {
     update_geometry_of_object(conn, o_id, create_geometry(points));
   }
 
-  public static int insert_new_to_db(Connection conn, String o_name, String o_type, double[] points)
+  public static int insert_new_line_string(Connection conn, String o_name, String o_type, double[] points)
       throws Exception {
     return insert_new_object_to_db(conn, o_name, o_type, create_geometry(points));
   }
 
   public static void add_points_to_line_string(Connection conn, int o_id, double[] points)
       throws Exception {
-    JGeometry geometry = select_geometry_for_update(conn, o_id);
-    double[] sdo_ord_array = geometry.getOrdinatesArray();
-    for (int i = 0; i < points.length; ) {
-      sdo_ord_array = ArrayUtils.addAll(sdo_ord_array, points[i], points[i + 1]);
-      i += POINT_ELEM_SIZE;
-    }
-    update_geometry_in_db(conn, o_id, sdo_ord_array);
+    update_geometry_of_line_string(conn, o_id, add_points_to_collection(conn, o_id, points));
   }
 
   public static void delete_points_from_line_string(Connection conn, int o_id, double[] points)
       throws Exception {
-    JGeometry geometry = select_geometry_for_update(conn, o_id);
-    double[] sdo_ord_array = geometry.getOrdinatesArray();
-    for (int i = 0; i < points.length; ) {
-      for (int j = 0; j < sdo_ord_array.length; ) {
-        if (sdo_ord_array[j] == points[i] && sdo_ord_array[j + 1] == points[i + 1]) {
-          sdo_ord_array = ArrayUtils.removeAll(sdo_ord_array, j, j + 1);
-          break;
-        }
-        j += POINT_ELEM_SIZE;
-      }
-      i += POINT_ELEM_SIZE;
-    }
-    update_geometry_in_db(conn, o_id, sdo_ord_array);
+    update_geometry_of_line_string(conn, o_id, delete_points_from_collection(conn, o_id, points));
   }
 }

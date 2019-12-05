@@ -3,7 +3,10 @@ package upa.db;
 import oracle.jdbc.pool.OracleDataSource;
 import oracle.ord.im.OrdImage;
 import upa.db.multimedia.Image;
-import upa.db.spatial.*;
+import upa.db.spatial.Circle;
+import upa.db.spatial.CircleCollection;
+import upa.db.spatial.MultiPoint;
+import upa.db.spatial.StraightLineString;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,7 +84,7 @@ public class InitDB {
       Circle.update_geometry_in_db(conn, 3, new double[] {20.00, 20.00, 10.0});
 
       //            // line-string
-      StraightLineString.insert_new_to_db(
+      StraightLineString.insert_new_line_string(
           conn, "K", "Kine", new double[] {130, 65, 180, 75, 205, 55, 250, 85, 275, 45});
       StraightLineString.delete_points_from_line_string(conn, 4, new double[] {180, 75, 130, 65});
       StraightLineString.add_points_to_line_string(conn, 4, new double[] {300, 50, 250, 90});
@@ -115,13 +118,15 @@ public class InitDB {
       CircleCollection.delete_object_from_collection(conn, 5, new int[] {2, 4}, 6);
 
       // multipoint
-      MultiPoint.insert_new_multipoint_to_db(
+      MultiPoint.insert_new_multipoint(
           conn,
           "M",
           "MultiPoint",
           new double[] {25.0, 35.0, 35.0, 35.0, 45.0, 35.0, 25.0, 60.0, 35.0, 60.0, 45.0, 60.0});
       MultiPoint.delete_object_from_collection(conn, 10, new int[] {1, 5}, 2);
-      MultiPoint.add_point_to_multipoint(conn, 10, new double[][] {{35.0, 35.0}, {45.0, 60.0}});
+      MultiPoint.add_points_to_multipoint(conn, 10, new double[] {35.0, 35.0, 45.0, 60.0});
+      MultiPoint.add_points_to_multipoint(conn, 10, new double[] {55.0, 60.0, 55.0, 35.0});
+      MultiPoint.delete_points_from_multipoint(conn, 10, new double[] {25.0, 35.0, 35.0, 60.0});
     } catch (SQLException | IOException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
     }

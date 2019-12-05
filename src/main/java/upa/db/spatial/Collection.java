@@ -10,6 +10,7 @@ public class Collection extends SpatialObject {
   private static final int ELEMENT_INFO_LENGTH = 3;
   private static final String SQL_SELECT_GEOMETRY_FOR_UPDATE =
       "SELECT geometry FROM Village WHERE o_id = ?";
+  private static final int POINT_ELEM_SIZE = 2;
 
   public static void delete_object_from_collection(
       Connection conn, int o_id, int[] o_idxs, int o_length) throws Exception {
@@ -61,5 +62,34 @@ public class Collection extends SpatialObject {
         }
       }
     }
+  }
+
+  public static double[] add_points_to_collection(Connection conn, int o_id, double[] points)
+          throws Exception {
+    JGeometry geometry = select_geometry_for_update(conn, o_id);
+    double[] sdo_ord_array = geometry.getOrdinatesArray();
+    for (int i = 0; i < points.length; ) {
+      sdo_ord_array = ArrayUtils.addAll(sdo_ord_array, points[i], points[i + 1]);
+      i += POINT_ELEM_SIZE;
+    }
+    return sdo_ord_array;
+  }
+
+  public static double[] delete_points_from_collection(Connection conn, int o_id, double[] points)
+      throws Exception {
+    JGeometry geometry = select_geometry_for_update(conn, o_id);
+    double[] sdo_ord_array = geometry.getOrdinatesArray();
+    int[] sdo_elem_info = geometry.getElemInfo();
+    for (int i = 0; i < points.length; ) {
+      for (int j = 0; j < sdo_ord_array.length; ) {
+        if (sdo_ord_array[j] == points[i] && sdo_ord_array[j + 1] == points[i + 1]) {
+          sdo_ord_array = ArrayUtils.removeAll(sdo_ord_array, j, j + 1);
+          break;
+        }
+        j += POINT_ELEM_SIZE;
+      }
+      i += POINT_ELEM_SIZE;
+    }
+    return sdo_ord_array;
   }
 }
