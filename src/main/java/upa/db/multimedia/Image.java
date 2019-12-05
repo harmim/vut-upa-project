@@ -33,7 +33,7 @@ public class Image extends GeneralDB {
           + "WHERE (src.image_id = ?) AND (src.image_id <> dst.image_id) "
           + "ORDER BY similarity ASC";
 
-  public static int save_image_from_file_to_db(Connection conn, int image_id, String filename)
+  public static int save_image_from_file(Connection conn, int image_id, String filename)
       throws SQLException, NotFoundException, IOException {
     final boolean previous_auto_commit = conn.getAutoCommit();
     conn.setAutoCommit(false);
@@ -48,14 +48,14 @@ public class Image extends GeneralDB {
       }
       ord_image = select_ord_image_for_update(conn, image_id);
       ord_image.loadDataFromFile(filename);
-      save_ord_image_to_db(conn, image_id, ord_image);
+      save_ord_image(conn, image_id, ord_image);
     } finally {
       conn.setAutoCommit(previous_auto_commit);
     }
     return image_id;
   }
 
-  private static void save_ord_image_to_db(Connection conn, int image_id, OrdImage ord_image)
+  private static void save_ord_image(Connection conn, int image_id, OrdImage ord_image)
       throws SQLException {
     ord_image.setProperties();
     try (PreparedStatement update_prepared_statement = conn.prepareStatement(SQL_UPDATE_IMAGE)) {
@@ -70,7 +70,7 @@ public class Image extends GeneralDB {
 
   private static OrdImage select_ord_image_for_update(Connection conn, int image_id)
       throws NotFoundException, SQLException {
-    return getOrdImage(conn, image_id, SQL_SELECT_IMAGE_FOR_UPDATE);
+    return get_ord_image(conn, image_id, SQL_SELECT_IMAGE_FOR_UPDATE);
   }
 
   private static void recreate_still_image_data(Connection conn, int image_id) throws SQLException {
@@ -85,16 +85,16 @@ public class Image extends GeneralDB {
     }
   }
 
-  public static void delete_image_from_db(Connection conn, int image_id) throws SQLException {
-    delete_object_from_db(conn, SQL_DELETE_IMAGE, image_id);
+  public static void delete_image(Connection conn, int image_id) throws SQLException {
+    delete_object(conn, SQL_DELETE_IMAGE, image_id);
   }
 
-  public static OrdImage load_image_from_db(Connection conn, int image_id)
+  public static OrdImage load_image(Connection conn, int image_id)
       throws SQLException, NotFoundException {
-    return getOrdImage(conn, image_id, SQL_SELECT_IMAGE);
+    return get_ord_image(conn, image_id, SQL_SELECT_IMAGE);
   }
 
-  private static OrdImage getOrdImage(Connection conn, int image_id, String sqlSelectImage)
+  private static OrdImage get_ord_image(Connection conn, int image_id, String sqlSelectImage)
       throws SQLException, NotFoundException {
     try (PreparedStatement load_prepared_statement = conn.prepareStatement(sqlSelectImage)) {
       load_prepared_statement.setInt(1, image_id);
@@ -109,7 +109,7 @@ public class Image extends GeneralDB {
     }
   }
 
-  public static void process_image_in_db(
+  public static void process_image(
       Connection conn,
       int image_id,
       String op_code,
@@ -123,7 +123,7 @@ public class Image extends GeneralDB {
     try {
       OrdImage ord_image = select_ord_image_for_update(conn, image_id);
       execute_processing_of_image(ord_image, op_code, param1, param2, param3, param4);
-      save_ord_image_to_db(conn, image_id, ord_image);
+      save_ord_image(conn, image_id, ord_image);
     } finally {
       conn.setAutoCommit(previous_auto_commit);
     }

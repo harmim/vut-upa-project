@@ -45,24 +45,24 @@ public class InitDB {
       try (Connection conn = ods.getConnection()) {
         // save images to database
         for (File image_name : image_name_list) {
-          Image.save_image_from_file_to_db(conn, 0, image_name.getPath());
+          Image.save_image_from_file(conn, 0, image_name.getPath());
         }
         System.out.println("*** SAVED IMAGES DONE ***");
 
         // delete images from database
-        Image.delete_image_from_db(conn, 1);
+        Image.delete_image(conn, 1);
         System.out.println("*** DELETE IMAGE DONE ***");
 
         // change images in db
-        Image.process_image_in_db(conn, 3, "rotate", 90.0, 0.0, 0.0, 0.0);
-        Image.process_image_in_db(conn, 3, "cut", 0.0, 0.0, 200.0, 200.0);
-        Image.process_image_in_db(conn, 3, "mirror", 0.0, 0.0, 0.0, 0.0);
-        Image.process_image_in_db(conn, 3, "scale", 2.25, 0.0, 0.0, 0.0);
-        Image.process_image_in_db(conn, 3, "monochrome", 0.0, 0.0, 0.0, 0.0);
+        Image.process_image(conn, 3, "rotate", 90.0, 0.0, 0.0, 0.0);
+        Image.process_image(conn, 3, "cut", 0.0, 0.0, 200.0, 200.0);
+        Image.process_image(conn, 3, "mirror", 0.0, 0.0, 0.0, 0.0);
+        Image.process_image(conn, 3, "scale", 2.25, 0.0, 0.0, 0.0);
+        Image.process_image(conn, 3, "monochrome", 0.0, 0.0, 0.0, 0.0);
 
         // load most similar images from database
         int sim_image_id = Image.find_most_similar_image(conn, 3, 0.3, 0.3, 0.1, 0.3);
-        OrdImage load_image = Image.load_image_from_db(conn, sim_image_id);
+        OrdImage load_image = Image.load_image(conn, sim_image_id);
         load_image.getDataInFile("./src/load_image.gif");
         System.out.println("*** LOAD SIMILAR IMAGE DONE ***");
 
@@ -80,8 +80,8 @@ public class InitDB {
       //            SpatialObject.delete_spatial_object_from_db(conn, 3);
       //            Rectangle.insert_new_to_db(conn, "X", "Building", new double[]{20,20, 120,120});
 
-      Circle.insert_new_to_db(conn, "C", "Circle", new double[] {15.0, 15.0, 5.0});
-      Circle.update_geometry_in_db(conn, 3, new double[] {20.00, 20.00, 10.0});
+      Circle.insert_new_circle(conn, "C", "Circle", new double[] {15.0, 15.0, 5.0});
+      Circle.update_geometry_of_circle(conn, 3, new double[] {20.00, 20.00, 10.0});
 
       //            // line-string
       StraightLineString.insert_new_line_string(
@@ -96,9 +96,9 @@ public class InitDB {
       CircleCollection.insert_new_collection_to_db(
           conn, "G-circles", "trees", new double[] {50.0, 65.0, 8.0}, 5, false);
 
-      Circle.insert_new_to_db(conn, "B1", "bushes1", new double[] {0, 0, 5});
-      Circle.insert_new_to_db(conn, "B1", "bushes1", new double[] {5, 5, 5});
-      Circle.insert_new_to_db(conn, "B1", "bushes1", new double[] {10, 10, 5});
+      Circle.insert_new_circle(conn, "B1", "bushes1", new double[] {0, 0, 5});
+      Circle.insert_new_circle(conn, "B1", "bushes1", new double[] {5, 5, 5});
+      Circle.insert_new_circle(conn, "B1", "bushes1", new double[] {10, 10, 5});
 
       CircleCollection.delete_object_from_collection(conn, 6, new int[] {0, 4}, 6);
       CircleCollection.update_geometry_of_collection(conn, 6, 15, 10, 75);

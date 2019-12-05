@@ -27,13 +27,13 @@ public class Circle extends SpatialObject {
         get_sdo_points(circle_data[0], circle_data[1], circle_data[2]));
   }
 
-  public static void update_geometry_in_db(Connection conn, int o_id, double[] circle_data)
+  public static void update_geometry_of_circle(Connection conn, int o_id, double[] circle_data)
       throws Exception {
     update_geometry_of_object(conn, o_id, create_geometry(circle_data));
   }
 
-  public static int insert_new_to_db(
+  public static int insert_new_circle(
       Connection conn, String o_name, String o_type, double[] circle_data) throws Exception {
-    return insert_new_object_to_db(conn, o_name, o_type, create_geometry(circle_data));
+    return insert_new_object(conn, o_name, o_type, create_geometry(circle_data));
   }
 }

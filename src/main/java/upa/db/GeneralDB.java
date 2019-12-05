@@ -19,7 +19,7 @@ public class GeneralDB {
     }
   }
 
-  protected static void delete_object_from_db(Connection conn, String sql_delete_object, int obj_id)
+  protected static void delete_object(Connection conn, String sql_delete_object, int obj_id)
       throws SQLException {
     try (PreparedStatement delete_prepared_statement = conn.prepareStatement(sql_delete_object)) {
       delete_prepared_statement.setInt(1, obj_id);

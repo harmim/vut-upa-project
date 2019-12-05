@@ -29,7 +29,7 @@ public class SpatialObject extends GeneralDB {
     }
   }
 
-  protected static int insert_new_object_to_db(
+  protected static int insert_new_object(
       Connection conn, String o_name, String o_type, JGeometry j_geom) throws Exception {
     try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_INSERT_NEW_OBJECT)) {
       Struct obj = JGeometry.storeJS(conn, j_geom);
@@ -41,7 +41,7 @@ public class SpatialObject extends GeneralDB {
     return get_last_inserted_id(conn, SQL_SELECT_LAST_OBJECT_ID);
   }
 
-  public static void delete_spatial_object_from_db(Connection conn, int o_id) throws SQLException {
-    delete_object_from_db(conn, SQL_DELETE_OBJECT, o_id);
+  public static void delete_object(Connection conn, int o_id) throws SQLException {
+    delete_object(conn, SQL_DELETE_OBJECT, o_id);
   }
 }

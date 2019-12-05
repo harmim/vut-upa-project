@@ -18,13 +18,13 @@ public class Rectangle extends SpatialObject {
         points);
   }
 
-  public static void update_geometry_in_db(Connection conn, int o_id, double[] points)
+  public static void update_geometry_of_rectangle(Connection conn, int o_id, double[] points)
       throws Exception {
     update_geometry_of_object(conn, o_id, create_geometry(points));
   }
 
-  public static int insert_new_to_db(Connection conn, String o_name, String o_type, double[] points)
+  public static int insert_new_rectangle(Connection conn, String o_name, String o_type, double[] points)
       throws Exception {
-    return insert_new_object_to_db(conn, o_name, o_type, create_geometry(points));
+    return insert_new_object(conn, o_name, o_type, create_geometry(points));
   }
 };

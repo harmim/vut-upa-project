@@ -75,7 +75,7 @@ public class CircleCollection extends Collection {
       throws Exception {
     compute_coordinates_of_disjoint_circles(
         n, circles_data[0], circles_data[1], circles_data[2], horizontal);
-    int o_id = insert_new_object_to_db(conn, o_name, o_type, create_geometry());
+    int o_id = insert_new_object(conn, o_name, o_type, create_geometry());
     CircleCollectionDB.update_data_collection(
         conn, o_id, circles_data[0], circles_data[1], n, CircleCollectionDB.SQL_INSERT_COLLECTION);
     flush_arrays();

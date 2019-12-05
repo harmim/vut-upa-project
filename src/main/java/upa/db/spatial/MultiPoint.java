@@ -36,7 +36,7 @@ public class MultiPoint extends Collection {
 
   public static int insert_new_multipoint(
       Connection conn, String o_name, String o_type, double[] points) throws Exception {
-    return insert_new_object_to_db(conn, o_name, o_type, create_geometry(points));
+    return insert_new_object(conn, o_name, o_type, create_geometry(points));
   }
 
   public static void add_points_to_multipoint(Connection conn, int o_id, double[] points)
