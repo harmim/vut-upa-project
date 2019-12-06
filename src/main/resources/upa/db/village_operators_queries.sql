@@ -11,3 +11,13 @@ FROM Village v
 WHERE SDO_NN(v.geometry, (SELECT geometry FROM Village WHERE o_id = 2), 'sdo_num_res=8 distance=200', 1) = 'TRUE'
   AND v.o_type IN ('trees', 'bushes1', 'Kine')
 ORDER BY dist;
+
+SELECT v.o_id
+FROM Village v
+WHERE SDO_RELATE(v.geometry, (SELECT geometry FROM Village WHERE o_id = 12), 'mask=INSIDE') = 'TRUE'
+  AND v.o_type IN ('House', 'bushes1', 'Line')
+UNION ALL
+SELECT v.o_id
+FROM Village v
+WHERE SDO_RELATE(v.geometry, (SELECT geometry FROM Village WHERE o_id = 12), 'mask=DISJOINT') = 'TRUE'
+  AND v.o_type IN ('House', 'bushes1', 'Line');

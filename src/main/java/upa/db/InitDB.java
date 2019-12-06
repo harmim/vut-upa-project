@@ -3,6 +3,7 @@ package upa.db;
 import oracle.jdbc.pool.OracleDataSource;
 import oracle.ord.im.OrdImage;
 import upa.db.multimedia.Image;
+import upa.db.queries.Mask;
 import upa.db.queries.SpatialOperators;
 import upa.db.spatial.*;
 
@@ -133,6 +134,10 @@ public class InitDB {
       Point.insert_new_point(conn, "PPP", "PPPoint", new double[] {200, 200});
       Point.update_geometry_of_point(conn, 11, new double[] {150, 175});
 
+      // rectangle
+      Rectangle.insert_new_rectangle(conn, "Z", "T1", new double[] {5, 5, 120, 120});
+      Circle.insert_new_circle(conn, "X", "T2", new double[]{30,30, 20});
+
       conn.commit();
       conn.setAutoCommit(previous_auto_commit);
       conn.close();
@@ -149,7 +154,15 @@ public class InitDB {
       double[] o_ids =
           SpatialOperators.get_nearest_neighbours_of_object(
               conn, 2, 8, 200, new String[] {"trees", "bushes1", "Kine"});
-      System.out.print(Arrays.toString(o_ids));
+      System.out.println(Arrays.toString(o_ids));
+
+      int[] o_ids_1 =
+          SpatialOperators.get_related_objects_of_object(
+              conn,
+              12,
+              new Mask[] {Mask.INSIDE, Mask.DISJOINT},
+              new String[] {"House", "bushes1", "Line", "T2"});
+      System.out.print(Arrays.toString(o_ids_1));
 
       conn.commit();
       conn.setAutoCommit(previous_auto_commit);
