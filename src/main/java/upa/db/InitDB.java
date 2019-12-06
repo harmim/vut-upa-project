@@ -3,12 +3,14 @@ package upa.db;
 import oracle.jdbc.pool.OracleDataSource;
 import oracle.ord.im.OrdImage;
 import upa.db.multimedia.Image;
+import upa.db.queries.SpatialOperators;
 import upa.db.spatial.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 public class InitDB {
 
@@ -28,6 +30,7 @@ public class InitDB {
 
       //            save_images_to_db(ods);
       save_object_to_db(ods);
+      check_db_queries(ods);
 
     } catch (SQLException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
@@ -71,6 +74,8 @@ public class InitDB {
 
   private static void save_object_to_db(OracleDataSource ods) throws Exception {
     try (Connection conn = ods.getConnection()) {
+      final boolean previous_auto_commit = conn.getAutoCommit();
+      conn.setAutoCommit(false);
       // rectangle
       //            Rectangle.update_geometry_in_db(conn, 1, new double[]{200,200, 300,300});
       //            Rectangle.insert_new_to_db(conn, "Z", "House", new double[]{20,20, 120,120});
@@ -125,9 +130,31 @@ public class InitDB {
       MultiPoint.add_points_to_multipoint(conn, 10, new double[] {55.0, 60.0, 55.0, 35.0});
       MultiPoint.delete_points_from_multipoint(conn, 10, new double[] {25.0, 35.0, 35.0, 60.0});
 
-      Point.insert_new_point(conn, "PPP", "PPPoint", new double[] {200,200});
+      Point.insert_new_point(conn, "PPP", "PPPoint", new double[] {200, 200});
       Point.update_geometry_of_point(conn, 11, new double[] {150, 175});
+
+      conn.commit();
+      conn.setAutoCommit(previous_auto_commit);
+      conn.close();
     } catch (SQLException | IOException sqlEx) {
+      System.err.println("SQLException: " + sqlEx.getMessage());
+    }
+  }
+
+  private static void check_db_queries(OracleDataSource ods) {
+    try (Connection conn = ods.getConnection()) {
+      final boolean previous_auto_commit = conn.getAutoCommit();
+      conn.setAutoCommit(false);
+
+      double[] o_ids =
+          SpatialOperators.get_nearest_neighbours_of_object(
+              conn, 2, 8, 200, new String[] {"trees", "bushes1", "Kine"});
+      System.out.print(Arrays.toString(o_ids));
+
+      conn.commit();
+      conn.setAutoCommit(previous_auto_commit);
+      conn.close();
+    } catch (SQLException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
     }
   }
