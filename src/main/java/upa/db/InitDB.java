@@ -160,7 +160,7 @@ public class InitDB {
           SpatialOperators.get_related_objects_of_object(
               conn,
               12,
-              new Mask[] {Mask.INSIDE, Mask.DISJOINT},
+              new Mask[] {Mask.INSIDE, Mask.OVERLAPBDYINTERSECT},
               new String[] {"House", "bushes1", "Line", "T2"});
       System.out.print(Arrays.toString(o_ids_1));
 

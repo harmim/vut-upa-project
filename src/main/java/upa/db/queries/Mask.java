@@ -11,5 +11,4 @@ public enum Mask {
   COVERS,
   ANYINTERACT,
   ON,
-  DISJOINT
 }
