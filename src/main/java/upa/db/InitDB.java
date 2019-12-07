@@ -136,7 +136,7 @@ public class InitDB {
 
       // rectangle
       Rectangle.insert_new_rectangle(conn, "Z", "T1", new double[] {5, 5, 120, 120});
-      Circle.insert_new_circle(conn, "X", "T2", new double[]{30,30, 20});
+      Circle.insert_new_circle(conn, "X", "T2", new double[] {30, 30, 20});
 
       conn.commit();
       conn.setAutoCommit(previous_auto_commit);
@@ -151,18 +151,35 @@ public class InitDB {
       final boolean previous_auto_commit = conn.getAutoCommit();
       conn.setAutoCommit(false);
 
-      double[] o_ids =
-          SpatialOperators.get_nearest_neighbours_of_object(
+      double[] o_ids_by_id =
+          SpatialOperators.get_nearest_neighbours_of_object_by_id(
               conn, 2, 8, 200, new String[] {"trees", "bushes1", "Kine"});
-      System.out.println(Arrays.toString(o_ids));
+      System.out.println(Arrays.toString(o_ids_by_id));
 
-      int[] o_ids_1 =
-          SpatialOperators.get_related_objects_of_object(
+      double[] o_ids_by_types =
+          SpatialOperators.get_nearest_neighbours_of_object_by_type(
+              conn,
+              new String[] {"Line", "Kine"},
+              8,
+              200,
+              new String[] {"trees", "bushes1", "Kine"});
+      System.out.println(Arrays.toString(o_ids_by_types));
+
+      int[] o_ids_by_id_r =
+          SpatialOperators.get_related_objects_of_object_by_id(
               conn,
               12,
               new Mask[] {Mask.INSIDE, Mask.OVERLAPBDYINTERSECT},
               new String[] {"House", "bushes1", "Line", "T2"});
-      System.out.print(Arrays.toString(o_ids_1));
+      System.out.println(Arrays.toString(o_ids_by_id_r));
+
+      int[] o_ids_by_types_r =
+          SpatialOperators.get_related_objects_of_object_by_id(
+              conn,
+              12,
+              new Mask[] {Mask.INSIDE, Mask.OVERLAPBDYINTERSECT},
+              new String[] {"House", "T2"});
+      System.out.println(Arrays.toString(o_ids_by_types_r));
 
       conn.commit();
       conn.setAutoCommit(previous_auto_commit);
