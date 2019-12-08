@@ -1,0 +1,14 @@
+package upa.db.queries;
+
+public enum Mask {
+  TOUCH,
+  OVERLAPBDYDISJOINT,
+  OVERLAPBDYINTERSECT,
+  EQUAL,
+  INSIDE,
+  COVEREDBY,
+  CONTAINS,
+  COVERS,
+  ANYINTERACT,
+  ON,
+}
