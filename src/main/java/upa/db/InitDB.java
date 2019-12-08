@@ -64,7 +64,7 @@ public class InitDB {
         // load most similar images from database
         int sim_image_id = DBImage.find_most_similar_image(conn, 3, 0.3, 0.3, 0.1, 0.3);
         Image load_image = DBImage.load_image(conn, sim_image_id);
-//        load_image.getDataInFile("./src/load_image.gif");
+        //        load_image.getDataInFile("./src/load_image.gif");
         System.out.println("*** LOAD SIMILAR IMAGE DONE ***");
 
       } catch (SQLException | DBImage.NotFoundException | IOException sqlEx) {
@@ -174,6 +174,16 @@ public class InitDB {
               new Mask[] {Mask.INSIDE, Mask.OVERLAPBDYINTERSECT},
               new String[] {"House", "T2"});
       System.out.println(Arrays.toString(o_ids_by_types_r));
+
+      int[] o_ids_by_id_f =
+          SpatialOperators.get_interacted_objects_with_object_by_id(
+              conn, 12, new String[] {"House", "bushes1", "Line", "T2"});
+      System.out.println(Arrays.toString(o_ids_by_id_f));
+
+      int[] o_ids_by_type_f =
+          SpatialOperators.get_interacted_objects_with_object_by_type(
+              conn, new String[] {"House", "T2"}, new String[] {"House", "bushes1", "Line", "T2"});
+      System.out.println(Arrays.toString(o_ids_by_type_f));
 
       double area = SpatialOperators.get_area_of_object_by_id(conn, 6);
       System.out.printf("AREA = %g\n", area);

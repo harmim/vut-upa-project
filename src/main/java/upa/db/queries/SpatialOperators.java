@@ -25,6 +25,11 @@ public class SpatialOperators {
           + "WHERE v1.o_id <> v2.o_id AND SDO_RELATE(v1.geometry, v2.geometry, %s) = 'TRUE' AND %s "
           + "AND v1.o_type IN (%s) ";
   private static final String SQL_UNION_ALL = "UNION ALL ";
+  private static final String SQL_SELECT_INTERACTED_OBJECT =
+      "SELECT /*+ INDEX(v village_spatial_idx) */ v1.o_id "
+          + "FROM Village v1, Village v2 "
+          + "WHERE v1.o_id <> v2.o_id AND SDO_FILTER(v1.geometry, v2.geometry) = 'TRUE' AND %s "
+          + "AND v1.o_type IN (%s)";
   private static final String SQL_SELECT_AREA_OF_OBJECT =
       "SELECT SDO_GEOM.SDO_AREA(geometry, 0.005) FROM Village WHERE %s";
   private static final String SQL_SELECT_LENGTH_OF_OBJECT =
@@ -72,6 +77,25 @@ public class SpatialOperators {
             SQL_SELECT_DISTANCE_BETWEEN_OBJECTS,
             V1_OBJECT_ID_EQ + v1_o_id,
             V2_OBJECT_ID_EQ + v2_o_id));
+  }
+
+  public static int[] get_interacted_objects_with_object_by_id(
+      Connection conn, int o_id, String[] v1_o_types) throws SQLException {
+    return get_interacted_objects_of_object(conn, v1_o_types, V2_OBJECT_ID_EQ + o_id);
+  }
+
+  public static int[] get_interacted_objects_with_object_by_type(
+      Connection conn, String[] v2_o_types, String[] v1_o_types) throws SQLException {
+    return get_interacted_objects_of_object(
+        conn, v1_o_types, String.format(V2_OBJECT_TYPES_IN, build_object_types_expr(v2_o_types)));
+  }
+
+  private static int[] get_interacted_objects_of_object(
+      Connection conn, String[] v1_o_types, String query_format) throws SQLException {
+    String v1_o_type_str = build_object_types_expr(v1_o_types);
+    String sql_select_nn_of_object =
+        String.format(SQL_SELECT_INTERACTED_OBJECT, query_format, v1_o_type_str);
+    return execute_sql_query_get_ids(conn, sql_select_nn_of_object);
   }
 
   public static int[] get_nearest_neighbours_of_object_by_id(
