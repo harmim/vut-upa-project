@@ -186,14 +186,16 @@ public class CircleCollection extends Collection {
     flush_arrays();
   }
 
-  public static void add_circles_to_collection(Connection conn, int o_id, double[] circles_data)
+  public static void add_circles_to_collection(Connection conn, int o_id, int[] idxs)
       throws Exception {
     set_geometry_properties(conn, o_id);
     double r = (sdo_points.get(2) - sdo_points.get(0)) * 2;
-    for (int i = 0; i < circles_data.length; i += 3) {
-      int idx = (int) circles_data[i + 2];
-      fulfill_sdo_points(
-          circles_data[i], circles_data[i + 1], r, Math.min(idx * SDO_ORD_SIZE, sdo_points.size()));
+    for (int idx : idxs) {
+      double[] circle_center =
+          compute_centers_of_circle(collection_data.get(0), collection_data.get(1), r, idx);
+      double circle_x_start = circle_center[0] - r / 2;
+      double circle_y_start = circle_center[1] - r / 2;
+      fulfill_sdo_points(circle_x_start, circle_y_start, r, sdo_points.size());
       for (int j = idx * SDO_ELEM_SIZE; j < sdo_elem_info.size(); j += SDO_ELEM_SIZE) {
         sdo_elem_info.set(j, sdo_elem_info.get(j) + SDO_ORD_SIZE);
       }

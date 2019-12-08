@@ -105,13 +105,13 @@ public class InitDB {
 
       CircleCollection.delete_object_from_collection(conn, 5, new int[] {0, 3}, 6);
       CircleCollection.update_coordinates_of_collection(conn, 5, 100, 130);
-      CircleCollection.add_circles_to_collection(conn, 5, new double[] {100, 130, 0, 154, 130, 3});
+      CircleCollection.add_circles_to_collection(conn, 5, new int[] {0, 3});
       CircleCollection.update_diameter_of_circles_in_collection(conn, 5, 20);
       CircleCollection.update_coordinates_of_collection(conn, 5, 50, 150);
 
       CircleCollection.delete_object_from_collection(conn, 6, new int[] {0, 4}, 6);
       CircleCollection.update_coordinates_of_collection(conn, 6, 30, 55);
-      CircleCollection.add_circles_to_collection(conn, 6, new double[] {30, 55, 0, 30, 103, 4});
+      CircleCollection.add_circles_to_collection(conn, 6, new int[] {0, 4});
       CircleCollection.update_diameter_of_circles_in_collection(conn, 6, 20);
       CircleCollection.update_coordinates_of_collection(conn, 6, 200, 50);
       // multipoint
