@@ -145,12 +145,12 @@ public class InitDB {
       final boolean previous_auto_commit = conn.getAutoCommit();
       conn.setAutoCommit(false);
 
-      double[] o_ids_by_id =
+      int[] o_ids_by_id =
           SpatialOperators.get_nearest_neighbours_of_object_by_id(
               conn, 2, 8, 200, new String[] {"trees", "bushes1", "Kine"});
       System.out.println(Arrays.toString(o_ids_by_id));
 
-      double[] o_ids_by_types =
+      int[] o_ids_by_types =
           SpatialOperators.get_nearest_neighbours_of_object_by_type(
               conn,
               new String[] {"Line", "Kine"},
@@ -175,10 +175,15 @@ public class InitDB {
               new String[] {"House", "T2"});
       System.out.println(Arrays.toString(o_ids_by_types_r));
 
+      double area = SpatialOperators.get_area_of_object_by_id(conn, 6);
+      System.out.printf("AREA = %g\n", area);
+      double length = SpatialOperators.get_length_of_object_by_id(conn, 7);
+      System.out.printf("LENGTH = %g\n", length);
+
       conn.commit();
       conn.setAutoCommit(previous_auto_commit);
       conn.close();
-    } catch (SQLException sqlEx) {
+    } catch (SQLException | GeneralDB.NotFoundException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
     }
   }

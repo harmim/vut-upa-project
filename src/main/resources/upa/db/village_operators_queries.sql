@@ -55,3 +55,6 @@ WHERE v1.o_id <> v2.o_id
   AND SDO_RELATE(v1.geometry, v2.geometry, 'mask=OVERLAPBDYINTERSECT') = 'TRUE'
   AND v2.o_type IN ('House', 'T2')
   AND v1.o_type IN ('House', 'bushes1', 'Line', 'T2');
+
+SELECT o_id, SDO_GEOM.SDO_AREA(geometry, 0.005) FROM Village WHERE o_id = 2;
+SELECT o_id, SDO_GEOM.SDO_AREA(geometry, 0.005) FROM Village WHERE o_type IN ('trees', 'House');
