@@ -168,9 +168,9 @@ public class InitDB {
       System.out.println(Arrays.toString(o_ids_by_id_r));
 
       int[] o_ids_by_types_r =
-          SpatialOperators.get_related_objects_of_object_by_id(
+          SpatialOperators.get_related_objects_of_object_by_type(
               conn,
-              12,
+              new String[] {"House", "T2"},
               new Mask[] {Mask.INSIDE, Mask.OVERLAPBDYINTERSECT},
               new String[] {"House", "T2"});
       System.out.println(Arrays.toString(o_ids_by_types_r));
@@ -179,6 +179,10 @@ public class InitDB {
       System.out.printf("AREA = %g\n", area);
       double length = SpatialOperators.get_length_of_object_by_id(conn, 7);
       System.out.printf("LENGTH = %g\n", length);
+      double diameter = SpatialOperators.get_diameter_of_object_by_id(conn, 4);
+      System.out.printf("DIAMETER = %g\n", diameter);
+      double distance = SpatialOperators.get_distance_between_obejcts(conn, 4, 7);
+      System.out.printf("DIAMETER = %g\n", distance);
 
       conn.commit();
       conn.setAutoCommit(previous_auto_commit);

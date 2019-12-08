@@ -56,5 +56,24 @@ WHERE v1.o_id <> v2.o_id
   AND v2.o_type IN ('House', 'T2')
   AND v1.o_type IN ('House', 'bushes1', 'Line', 'T2');
 
-SELECT o_id, SDO_GEOM.SDO_AREA(geometry, 0.005) FROM Village WHERE o_id = 2;
-SELECT o_id, SDO_GEOM.SDO_AREA(geometry, 0.005) FROM Village WHERE o_type IN ('trees', 'House');
+-- AREA OF OBJECT
+SELECT o_id, SDO_GEOM.SDO_AREA(geometry, 0.005)
+FROM Village
+WHERE o_id = 2;
+
+-- LENGTH OF OBJECT
+SELECT o_id, SDO_GEOM.SDO_LENGTH(geometry, 0.005)
+FROM Village
+WHERE o_id = 7;
+
+-- DIAMETER OF OBJECT
+SELECT o_id, SDO_GEOM.SDO_DIAMETER(geometry, 0.005)
+FROM Village
+WHERE o_id = 4;
+
+-- MINIMAL DISTANCE BETWEEM TWO OBJECTS
+SELECT SDO_GEOM.SDO_DISTANCE(v1.geometry, v2.geometry, 0.005)
+FROM Village v1,
+     Village v2
+WHERE v1.o_id = 4
+  AND v2.o_id = 7;

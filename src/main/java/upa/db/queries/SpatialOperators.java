@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 public class SpatialOperators {
   private static final String OBJECT_ID_EQ = "o_id=";
+  private static final String V1_OBJECT_ID_EQ = "v1.o_id=";
   private static final String V2_OBJECT_ID_EQ = "v2.o_id=";
   private static final String V2_OBJECT_TYPES_IN = "v2.o_type IN (%s)";
   private static final String SQL_SELECT_NN_OF_OBJECT =
@@ -25,9 +26,14 @@ public class SpatialOperators {
           + "AND v1.o_type IN (%s) ";
   private static final String SQL_UNION_ALL = "UNION ALL ";
   private static final String SQL_SELECT_AREA_OF_OBJECT =
-      "SELECT o_id, SDO_GEOM.SDO_AREA(geometry, 0.005) FROM Village WHERE %s";
+      "SELECT SDO_GEOM.SDO_AREA(geometry, 0.005) FROM Village WHERE %s";
   private static final String SQL_SELECT_LENGTH_OF_OBJECT =
-      "SELECT o_id, SDO_GEOM.SDO_LENGTH(geometry, 0.005) FROM Village WHERE %s";
+      "SELECT SDO_GEOM.SDO_LENGTH(geometry, 0.005) FROM Village WHERE %s";
+  private static final String SQL_SELECT_DIAMETER_OF_OBJECT =
+      "SELECT SDO_GEOM.SDO_DIAMETER(geometry, 0.005) FROM Village WHERE %s";
+  private static final String SQL_SELECT_DISTANCE_BETWEEN_OBJECTS =
+      "SELECT SDO_GEOM.SDO_DISTANCE(v1.geometry, v2.geometry, 0.005) "
+          + "FROM Village v1, Village v2 WHERE %s AND %s";
 
   private static String build_object_types_expr(String[] o_types) {
     StringBuilder in_array_builder = new StringBuilder();
@@ -50,6 +56,22 @@ public class SpatialOperators {
       throws SQLException, NotFoundException {
     return execute_sql_query_get_value(
         conn, String.format(SQL_SELECT_LENGTH_OF_OBJECT, OBJECT_ID_EQ + o_id));
+  }
+
+  public static double get_diameter_of_object_by_id(Connection conn, int o_id)
+      throws SQLException, NotFoundException {
+    return execute_sql_query_get_value(
+        conn, String.format(SQL_SELECT_DIAMETER_OF_OBJECT, OBJECT_ID_EQ + o_id));
+  }
+
+  public static double get_distance_between_obejcts(Connection conn, int v1_o_id, int v2_o_id)
+      throws SQLException, NotFoundException {
+    return execute_sql_query_get_value(
+        conn,
+        String.format(
+            SQL_SELECT_DISTANCE_BETWEEN_OBJECTS,
+            V1_OBJECT_ID_EQ + v1_o_id,
+            V2_OBJECT_ID_EQ + v2_o_id));
   }
 
   public static int[] get_nearest_neighbours_of_object_by_id(
@@ -124,7 +146,7 @@ public class SpatialOperators {
       try (ResultSet result_set = prepared_statement.executeQuery()) {
         final OracleResultSet oracle_result_set = (OracleResultSet) result_set;
         if (oracle_result_set.next()) {
-          return oracle_result_set.getDouble(2);
+          return oracle_result_set.getDouble(1);
         } else {
           throw new NotFoundException();
         }
