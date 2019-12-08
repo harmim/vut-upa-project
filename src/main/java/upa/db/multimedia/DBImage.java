@@ -1,14 +1,22 @@
 package upa.db.multimedia;
 
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
 import oracle.jdbc.OraclePreparedStatement;
 import oracle.jdbc.OracleResultSet;
 import oracle.ord.im.OrdImage;
 import upa.db.GeneralDB;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-public class Image extends GeneralDB {
+public class DBImage extends GeneralDB {
   private static final String SQL_SELECT_LAST_IMAGE_ID = "SELECT MAX(image_id) FROM Images";
   private static final String SQL_SELECT_IMAGE = "SELECT image FROM Images WHERE image_id = ?";
   private static final String SQL_SELECT_IMAGE_FOR_UPDATE =
@@ -89,9 +97,15 @@ public class Image extends GeneralDB {
     delete_object(conn, SQL_DELETE_IMAGE, image_id);
   }
 
-  public static OrdImage load_image(Connection conn, int image_id)
-      throws SQLException, NotFoundException {
-    return get_ord_image(conn, image_id, SQL_SELECT_IMAGE);
+  private static Image convert_ord_image_to_image(OrdImage ord_image) throws IOException, SQLException {
+    BufferedImage buffered_image = ImageIO.read(new ByteArrayInputStream(ord_image.getDataInByteArray()));
+    return SwingFXUtils.toFXImage(buffered_image, null);
+  }
+
+  public static Image load_image(Connection conn, int image_id)
+          throws SQLException, NotFoundException, IOException {
+   return convert_ord_image_to_image(get_ord_image(conn, image_id, SQL_SELECT_IMAGE));
+
   }
 
   private static OrdImage get_ord_image(Connection conn, int image_id, String sqlSelectImage)
@@ -109,7 +123,7 @@ public class Image extends GeneralDB {
     }
   }
 
-  public static void process_image(
+  public static Image process_image(
       Connection conn,
       int image_id,
       String op_code,
@@ -117,13 +131,14 @@ public class Image extends GeneralDB {
       double param2,
       double param3,
       double param4)
-      throws NotFoundException, SQLException {
+          throws NotFoundException, SQLException, IOException {
     final boolean previous_auto_commit = conn.getAutoCommit();
     conn.setAutoCommit(false);
     try {
       OrdImage ord_image = select_ord_image_for_update(conn, image_id);
       execute_processing_of_image(ord_image, op_code, param1, param2, param3, param4);
       save_ord_image(conn, image_id, ord_image);
+      return convert_ord_image_to_image(ord_image);
     } finally {
       conn.setAutoCommit(previous_auto_commit);
     }

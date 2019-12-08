@@ -1,8 +1,8 @@
 package upa.db;
 
+import javafx.scene.image.Image;
 import oracle.jdbc.pool.OracleDataSource;
-import oracle.ord.im.OrdImage;
-import upa.db.multimedia.Image;
+import upa.db.multimedia.DBImage;
 import upa.db.queries.Mask;
 import upa.db.queries.SpatialOperators;
 import upa.db.spatial.*;
@@ -46,28 +46,28 @@ public class InitDB {
       try (Connection conn = ods.getConnection()) {
         // save images to database
         for (File image_name : image_name_list) {
-          Image.save_image_from_file(conn, 0, image_name.getPath());
+          DBImage.save_image_from_file(conn, 0, image_name.getPath());
         }
         System.out.println("*** SAVED IMAGES DONE ***");
 
         // delete images from database
-        Image.delete_image(conn, 1);
+        DBImage.delete_image(conn, 1);
         System.out.println("*** DELETE IMAGE DONE ***");
 
         // change images in db
-        Image.process_image(conn, 3, "rotate", 90.0, 0.0, 0.0, 0.0);
-        Image.process_image(conn, 3, "cut", 0.0, 0.0, 200.0, 200.0);
-        Image.process_image(conn, 3, "mirror", 0.0, 0.0, 0.0, 0.0);
-        Image.process_image(conn, 3, "scale", 2.25, 0.0, 0.0, 0.0);
-        Image.process_image(conn, 3, "monochrome", 0.0, 0.0, 0.0, 0.0);
+        DBImage.process_image(conn, 3, "rotate", 90.0, 0.0, 0.0, 0.0);
+        DBImage.process_image(conn, 3, "cut", 0.0, 0.0, 200.0, 200.0);
+        DBImage.process_image(conn, 3, "mirror", 0.0, 0.0, 0.0, 0.0);
+        DBImage.process_image(conn, 3, "scale", 2.25, 0.0, 0.0, 0.0);
+        DBImage.process_image(conn, 3, "monochrome", 0.0, 0.0, 0.0, 0.0);
 
         // load most similar images from database
-        int sim_image_id = Image.find_most_similar_image(conn, 3, 0.3, 0.3, 0.1, 0.3);
-        OrdImage load_image = Image.load_image(conn, sim_image_id);
-        load_image.getDataInFile("./src/load_image.gif");
+        int sim_image_id = DBImage.find_most_similar_image(conn, 3, 0.3, 0.3, 0.1, 0.3);
+        Image load_image = DBImage.load_image(conn, sim_image_id);
+//        load_image.getDataInFile("./src/load_image.gif");
         System.out.println("*** LOAD SIMILAR IMAGE DONE ***");
 
-      } catch (SQLException | Image.NotFoundException | IOException sqlEx) {
+      } catch (SQLException | DBImage.NotFoundException | IOException sqlEx) {
         System.err.println("SQLException: " + sqlEx.getMessage());
       }
     }
