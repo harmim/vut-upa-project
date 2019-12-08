@@ -94,7 +94,7 @@ public class InitDB {
 
       // circles
       CircleCollection.insert_new_collection_to_db(
-          conn, "F-circles", "trees", new double[] {50.0, 50.0, 8.0}, 5, true);
+          conn, "F-circles", "trees", new double[] {180.0, 150.0, 12.0}, 5, true);
 
       CircleCollection.insert_new_collection_to_db(
           conn, "G-circles", "trees", new double[] {50.0, 65.0, 8.0}, 5, false);
@@ -103,23 +103,17 @@ public class InitDB {
       Circle.insert_new_circle(conn, "B1", "bushes1", new double[] {5, 5, 5});
       Circle.insert_new_circle(conn, "B1", "bushes1", new double[] {10, 10, 5});
 
+      CircleCollection.delete_object_from_collection(conn, 5, new int[] {0, 3}, 6);
+      CircleCollection.update_coordinates_of_collection(conn, 5, 100, 130);
+      CircleCollection.add_circles_to_collection(conn, 5, new double[] {100, 130, 0, 154, 130, 3});
+      CircleCollection.update_diameter_of_circles_in_collection(conn, 5, 20);
+      CircleCollection.update_coordinates_of_collection(conn, 5, 50, 150);
+
       CircleCollection.delete_object_from_collection(conn, 6, new int[] {0, 4}, 6);
-      CircleCollection.update_geometry_of_collection(conn, 6, 15, 10, 75);
-      CircleCollection.add_circles_to_collection(conn, 6, new int[] {0, 4});
-      CircleCollection.update_geometry_of_collection(conn, 6, 15, 10, 97.5);
-      CircleCollection.add_circles_to_collection(conn, 6, new int[] {-1});
-      CircleCollection.delete_object_from_collection(conn, 6, new int[] {0}, 6);
-      CircleCollection.add_circles_to_collection(conn, 6, new int[] {0, 6});
-      CircleCollection.delete_object_from_collection(conn, 6, new int[] {6, 1}, 6);
-
-      CircleCollection.delete_object_from_collection(conn, 5, new int[] {2, 3}, 6);
-      CircleCollection.update_geometry_of_collection(conn, 5, 15, 35, 100);
-      CircleCollection.add_circles_to_collection(conn, 5, new int[] {2, 3});
-      CircleCollection.update_geometry_of_collection(conn, 5, 15, 52.5, 100);
-      CircleCollection.add_circles_to_collection(conn, 5, new int[] {-1});
-      CircleCollection.add_circles_to_collection(conn, 5, new int[] {6});
-      CircleCollection.delete_object_from_collection(conn, 5, new int[] {2, 4}, 6);
-
+      CircleCollection.update_coordinates_of_collection(conn, 6, 30, 55);
+      CircleCollection.add_circles_to_collection(conn, 6, new double[] {30, 55, 0, 30, 103, 4});
+      CircleCollection.update_diameter_of_circles_in_collection(conn, 6, 20);
+      CircleCollection.update_coordinates_of_collection(conn, 6, 200, 50);
       // multipoint
       MultiPoint.insert_new_multipoint(
           conn,

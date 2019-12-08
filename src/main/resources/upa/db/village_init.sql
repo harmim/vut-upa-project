@@ -16,6 +16,7 @@ CREATE TABLE CircleCollection
     c_id    INTEGER       NOT NULL,
     x_start BINARY_DOUBLE NOT NULL,
     y_start BINARY_DOUBLE NOT NULL,
+    r0      BINARY_DOUBLE NOT NULL,
     n       INTEGER       NOT NULL
 );
 

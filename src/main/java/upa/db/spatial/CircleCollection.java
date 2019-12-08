@@ -28,7 +28,7 @@ public class CircleCollection extends Collection {
     collection_data.clear();
   }
 
-  public static void fulfill_sdo_points(double x_start, double y_start, double r, int arr_idx) {
+  private static void fulfill_sdo_points(double x_start, double y_start, double r, int arr_idx) {
     sdo_points.addAll(
         arr_idx,
         List.of(
@@ -37,8 +37,24 @@ public class CircleCollection extends Collection {
             x_start + r / 2, y_start + r));
   }
 
+  private static void compute_circle_coordinats_after_change(double delta_r) {
+    ArrayList<Double> copy_sdo_points = new ArrayList<>(sdo_points);
+    sdo_points.clear();
+    for (int i = 0; i < copy_sdo_points.size(); i += SDO_ORD_SIZE) {
+      sdo_points.addAll(
+          sdo_points.size(),
+          List.of(
+              copy_sdo_points.get(i),
+              copy_sdo_points.get(i + 1) - delta_r / 2,
+              copy_sdo_points.get(i + 2) + delta_r / 2,
+              copy_sdo_points.get(i + 3),
+              copy_sdo_points.get(i + 4),
+              copy_sdo_points.get(i + 5) + delta_r / 2));
+    }
+  }
+
   private static double[] compute_circle_coordinates(
-      double x_start, double y_start, double r, int idx, boolean is_horizontal) {
+      double x_start, double y_start, double r, int idx) {
     if (is_horizontal) {
       x_start += idx * CIRCLE_SEGMENT_LENGTH * r;
     } else {
@@ -47,11 +63,41 @@ public class CircleCollection extends Collection {
     return new double[] {x_start, y_start};
   }
 
+  private static double[] compute_centers_of_circle(
+      double x_start, double y_start, double r, int idx) {
+    r = collection_data.get(2);
+    if (is_horizontal) {
+      x_start = x_start + (0.5 * r) + (idx * CIRCLE_SEGMENT_LENGTH * r);
+      y_start = y_start + r / 2;
+    } else {
+      y_start = y_start + (0.5 * r) + (idx * CIRCLE_SEGMENT_LENGTH * r);
+      x_start = x_start + r / 2;
+    }
+    return new double[] {x_start, y_start};
+  }
+
+  private static int compute_order_number_of_circle(
+      ArrayList<Double> sdo_points_arr, double r, int i) {
+    int old_idx;
+    if (is_horizontal) {
+      old_idx =
+          (int)
+              ((sdo_points_arr.get(i) - r / 2 - collection_data.get(0))
+                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
+    } else {
+      old_idx =
+          (int)
+              ((sdo_points_arr.get(i + 1) - collection_data.get(1))
+                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
+    }
+    return old_idx;
+  }
+
   public static void compute_coordinates_of_disjoint_circles(
-      int n, double x_start, double y_start, double r, boolean is_horizontal) {
+      int n, double x_start, double y_start, double r) {
     int current_offset = 1;
     for (int i = 0; i < n; i++) {
-      double[] coordinates = compute_circle_coordinates(x_start, y_start, r, i, is_horizontal);
+      double[] coordinates = compute_circle_coordinates(x_start, y_start, r, i);
       fulfill_sdo_points(coordinates[0], coordinates[1], r, sdo_points.size());
       sdo_elem_info.addAll(List.of(current_offset, SDO_ETYPE, SDO_INTERPRETATION));
       current_offset += SDO_ORD_SIZE;
@@ -73,11 +119,17 @@ public class CircleCollection extends Collection {
       int n,
       boolean horizontal)
       throws Exception {
-    compute_coordinates_of_disjoint_circles(
-        n, circles_data[0], circles_data[1], circles_data[2], horizontal);
+    is_horizontal = horizontal;
+    compute_coordinates_of_disjoint_circles(n, circles_data[0], circles_data[1], circles_data[2]);
     int o_id = insert_new_object(conn, o_name, o_type, create_geometry());
     CircleCollectionDB.update_data_collection(
-        conn, o_id, circles_data[0], circles_data[1], n, CircleCollectionDB.SQL_INSERT_COLLECTION);
+        conn,
+        o_id,
+        circles_data[0],
+        circles_data[1],
+        circles_data[2],
+        n,
+        CircleCollectionDB.SQL_INSERT_COLLECTION);
     flush_arrays();
     return o_id;
   }
@@ -102,95 +154,72 @@ public class CircleCollection extends Collection {
     update_geometry_of_object(conn, o_id, create_geometry());
   }
 
-  public static void update_geometry_of_collection(
-      Connection conn, int o_id, double r, double x_start, double y_start) throws Exception {
+  public static void update_diameter_of_circles_in_collection(
+      Connection conn, int o_id, double new_r) throws Exception {
     set_geometry_properties(conn, o_id);
-    update_object_coordinates(x_start, y_start, r);
+    compute_circle_coordinats_after_change(new_r - (sdo_points.get(2) - sdo_points.get(0)) * 2);
+    update_geometry_of_collection(conn, o_id);
+    CircleCollectionDB.update_data_collection(
+        conn,
+        o_id,
+        sdo_points.get(0) - new_r / 2,
+        sdo_points.get(1),
+        collection_data.get(2),
+        sdo_elem_info.size() / SDO_ELEM_SIZE,
+        CircleCollectionDB.SQL_UPDATE_COLLECTION);
+    flush_arrays();
+  }
+
+  public static void update_coordinates_of_collection(
+      Connection conn, int o_id, double x_start, double y_start) throws Exception {
+    set_geometry_properties(conn, o_id);
+    update_object_coordinates(x_start, y_start);
     update_geometry_of_collection(conn, o_id);
     CircleCollectionDB.update_data_collection(
         conn,
         o_id,
         x_start,
         y_start,
+        collection_data.get(2),
         sdo_elem_info.size() / SDO_ELEM_SIZE,
         CircleCollectionDB.SQL_UPDATE_COLLECTION);
     flush_arrays();
   }
 
-  public static void add_circles_to_collection(Connection conn, int o_id, int[] idxs)
+  public static void add_circles_to_collection(Connection conn, int o_id, double[] circles_data)
       throws Exception {
     set_geometry_properties(conn, o_id);
-    for (int idx : idxs) {
-      if (idx == -1) {
-        add_circle_to_begin(conn, o_id);
-      } else {
-        add_circle_to_free_place(Math.min(idx, sdo_elem_info.size() / SDO_ELEM_SIZE));
+    double r = (sdo_points.get(2) - sdo_points.get(0)) * 2;
+    for (int i = 0; i < circles_data.length; i += 3) {
+      int idx = (int) circles_data[i + 2];
+      fulfill_sdo_points(
+          circles_data[i], circles_data[i + 1], r, Math.min(idx * SDO_ORD_SIZE, sdo_points.size()));
+      for (int j = idx * SDO_ELEM_SIZE; j < sdo_elem_info.size(); j += SDO_ELEM_SIZE) {
+        sdo_elem_info.set(j, sdo_elem_info.get(j) + SDO_ORD_SIZE);
       }
-      if (idx == -1 || idx == (sdo_elem_info.size() / SDO_ELEM_SIZE) - 1) {
-        CircleCollectionDB.update_data_collection(
-            conn,
-            o_id,
-            collection_data.get(0),
-            collection_data.get(1),
-            sdo_elem_info.size() / SDO_ELEM_SIZE,
-            CircleCollectionDB.SQL_UPDATE_COLLECTION);
-      }
+      sdo_elem_info.addAll(
+          Math.min(idx * SDO_ELEM_SIZE, sdo_elem_info.size()),
+          List.of(
+              Math.min(
+                  idx * SDO_ORD_SIZE + 1,
+                  sdo_elem_info.get(sdo_elem_info.size() - 3) + SDO_ORD_SIZE),
+              SDO_ETYPE,
+              SDO_INTERPRETATION));
     }
     update_geometry_of_collection(conn, o_id);
     flush_arrays();
   }
 
-  private static void add_circle_to_begin(Connection conn, int o_id) throws SQLException {
+  private static void update_object_coordinates(double x_start, double y_start) {
     double r = (sdo_points.get(2) - sdo_points.get(0)) * 2;
-    collection_data.set(
-        is_horizontal ? 0 : 1,
-        collection_data.get(is_horizontal ? 0 : 1) - CIRCLE_SEGMENT_LENGTH * r);
-    add_circle_to_free_place(0);
-  }
-
-  private static void add_circle_to_free_place(int idx) {
-    double[] coordinates =
-        compute_circle_coordinates(
-            collection_data.get(0),
-            collection_data.get(1),
-            (sdo_points.get(2) - sdo_points.get(0)) * 2,
-            idx,
-            is_horizontal);
-    fulfill_sdo_points(
-        coordinates[0],
-        coordinates[1],
-        (sdo_points.get(2) - sdo_points.get(0)) * 2,
-        Math.min(sdo_points.size(), idx * SDO_ORD_SIZE));
-    for (int i = idx * SDO_ELEM_SIZE; i < sdo_elem_info.size(); ) {
-      sdo_elem_info.set(i, sdo_elem_info.get(i) + SDO_ORD_SIZE);
-      i += SDO_ELEM_SIZE;
-    }
-    sdo_elem_info.addAll(
-        Math.min(sdo_elem_info.size(), idx * SDO_ELEM_SIZE),
-        List.of(idx * SDO_ORD_SIZE + 1, SDO_ETYPE, SDO_INTERPRETATION));
-  }
-
-  private static void update_object_coordinates(double x_start, double y_start, double r) {
-    double old_r = (sdo_points.get(2) - sdo_points.get(0)) * 2;
     ArrayList<Double> copy_sdo_points = new ArrayList<>(sdo_points);
     sdo_points.clear();
-    for (int i = 0; i < copy_sdo_points.size(); ) {
-      int old_idx;
-      if (is_horizontal) {
-        old_idx =
-            (int)
-                ((copy_sdo_points.get(i) - old_r / 2 - collection_data.get(0))
-                    / (CIRCLE_SEGMENT_LENGTH * old_r));
-      } else {
-        old_idx =
-            (int)
-                ((copy_sdo_points.get(i + 1) - collection_data.get(1))
-                    / (CIRCLE_SEGMENT_LENGTH * old_r));
-      }
-      double[] coordinates =
-          compute_circle_coordinates(x_start, y_start, r, old_idx, is_horizontal);
-      fulfill_sdo_points(coordinates[0], coordinates[1], r, sdo_points.size());
-      i += SDO_ORD_SIZE;
+    for (int i = 0; i < copy_sdo_points.size(); i += SDO_ORD_SIZE) {
+      int idx = compute_order_number_of_circle(copy_sdo_points, r, i);
+      double[] circle_center = compute_centers_of_circle(x_start, y_start, r, idx);
+      double circle_x_start = circle_center[0] - r / 2;
+      double circle_y_start = circle_center[1] - r / 2;
+      fulfill_sdo_points(circle_x_start, circle_y_start, r, sdo_points.size());
     }
   }
 
@@ -201,20 +230,27 @@ public class CircleCollection extends Collection {
 
 class CircleCollectionDB extends Collection {
   public static final String SQL_INSERT_COLLECTION =
-      "INSERT INTO CircleCollection (x_start, y_start, n, c_id) VALUES (?, ?, ?, ?)";
+      "INSERT INTO CircleCollection (x_start, y_start, r0, n, c_id) VALUES (?, ?, ?, ?, ?)";
   public static final String SQL_UPDATE_COLLECTION =
-      "UPDATE CircleCollection SET x_start = ?, y_start = ?, n = ? WHERE c_id = ?";
+      "UPDATE CircleCollection SET x_start = ?, y_start = ?, r0 = ?, n = ? WHERE c_id = ?";
   private static final String SQL_SELECT_COLLECTION_FOR_UPDATE =
-      "SELECT x_start, y_start, n FROM CircleCollection WHERE c_id = ?";
+      "SELECT x_start, y_start, r0, n FROM CircleCollection WHERE c_id = ?";
 
   public static void update_data_collection(
-      Connection conn, int c_id, double x_start, double y_start, int n, String sql_query)
+      Connection conn,
+      int c_id,
+      double x_start,
+      double y_start,
+      double r_0,
+      int n,
+      String sql_query)
       throws SQLException {
     try (PreparedStatement prepared_statement = conn.prepareStatement(sql_query)) {
-      prepared_statement.setInt(4, c_id);
+      prepared_statement.setInt(5, c_id);
       prepared_statement.setDouble(1, x_start);
       prepared_statement.setDouble(2, y_start);
-      prepared_statement.setInt(3, n);
+      prepared_statement.setDouble(3, r_0);
+      prepared_statement.setInt(4, n);
       prepared_statement.executeUpdate();
     }
   }
@@ -227,7 +263,10 @@ class CircleCollectionDB extends Collection {
       try (ResultSet result_set = prepare_statement.executeQuery()) {
         if (result_set.next()) {
           return new double[] {
-            result_set.getDouble(1), result_set.getDouble(2), result_set.getDouble(3)
+            result_set.getDouble(1),
+            result_set.getDouble(2),
+            result_set.getDouble(3),
+            result_set.getDouble(4)
           };
         } else {
           throw new NotFoundException();
