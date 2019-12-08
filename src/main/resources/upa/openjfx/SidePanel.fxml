@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="640.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="upa.openjfx.SidePanelController">
+   <children>
+      <BorderPane prefHeight="200.0" prefWidth="200.0">
+         <top>
+            <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+              <items>
+                  <MenuButton mnemonicParsing="false" text="Multimedia">
+                    <items>
+                      <MenuItem mnemonicParsing="false" text="Add image" />
+                      <MenuItem mnemonicParsing="false" text="Delete image" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <Menu mnemonicParsing="false" text="Rotate by">
+                          <items>
+                            <MenuItem mnemonicParsing="false" text="90 degrees" />
+                              <MenuItem mnemonicParsing="false" text="180 degrees" />
+                              <MenuItem mnemonicParsing="false" text="270 degrees" />
+                          </items>
+                        </Menu>
+                        <MenuItem mnemonicParsing="false" text="Mirror" />
+                        <MenuItem mnemonicParsing="false" text="Cut" />
+                        <Menu mnemonicParsing="false" text="Scale">
+                          <items>
+                            <MenuItem mnemonicParsing="false" text="Fixed" />
+                              <MenuItem mnemonicParsing="false" text="Max scale" />
+                              <MenuItem mnemonicParsing="false" text="Percentual" />
+                          </items>
+                        </Menu>
+                        <MenuItem mnemonicParsing="false" text="Grayscale" />
+                        <MenuItem mnemonicParsing="false" text="Find most similar" />
+                    </items>
+                  </MenuButton>
+                  <MenuButton mnemonicParsing="false" text="Spatial">
+                     <items>
+                        <MenuItem mnemonicParsing="false" text="Edit" />
+                        <MenuItem mnemonicParsing="false" text="Find N nearest" />
+                     </items>
+                  </MenuButton>
+                  <Button mnemonicParsing="false" onAction="#ShowImage" text="load" />
+              </items>
+            </ToolBar>
+         </top>
+         <center>
+            <GridPane BorderPane.alignment="CENTER">
+               <columnConstraints>
+                  <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="400.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="200.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <ImageView fx:id="image" fitHeight="200.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../../../pisomka/img.png" />
+                     </image>
+                  </ImageView>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" top="5.0" />
+               </padding>
+            </GridPane>
+         </center>
+      </BorderPane>
+   </children>
+</AnchorPane>
