@@ -27,3 +27,5 @@ FROM Village;
 -- with respect to the accurance that is set in the SDO_GEOM_METADATA
 SELECT v.o_name, v.geometry.ST_isValid()
 FROM Village v;
+
+COMMIT;

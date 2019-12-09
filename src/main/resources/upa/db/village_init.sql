@@ -42,6 +42,14 @@ VALUES ('Village', 'geometry',
            -- a local spatial reference system (not geographical; analytical functions will be without units)
         NULL);
 
+-------------------------------------------------------------------
+-- CREATE THE SPATIAL INDEX --
+-------------------------------------------------------------------
+CREATE INDEX village_spatial_idx
+    ON Village (geometry)
+    INDEXTYPE IS MDSYS.SPATIAL_INDEX_V2;
+-- Preceding statement created an R-tree index.
+
 -- check the validity of SDO_GEOMETRY
 -- with a custom accurance = 0.01
 SELECT o_name, SDO_GEOM.VALIDATE_GEOMETRY_WITH_CONTEXT(geometry, 0.1) valid

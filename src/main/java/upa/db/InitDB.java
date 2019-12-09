@@ -75,8 +75,6 @@ public class InitDB {
 
   private static void save_object_to_db(OracleDataSource ods) throws Exception {
     try (Connection conn = ods.getConnection()) {
-      final boolean previous_auto_commit = conn.getAutoCommit();
-      conn.setAutoCommit(false);
       // rectangle
       //            Rectangle.update_geometry_in_db(conn, 1, new double[]{200,200, 300,300});
       //            Rectangle.insert_new_to_db(conn, "Z", "House", new double[]{20,20, 120,120});
@@ -108,6 +106,8 @@ public class InitDB {
       CircleCollection.add_circles_to_collection(conn, 5, new int[] {0, 3});
       CircleCollection.update_diameter_of_circles_in_collection(conn, 5, 20);
       CircleCollection.update_coordinates_of_collection(conn, 5, 50, 150);
+      CircleCollection.update_diameter_of_circles_in_collection(conn, 5, 5);
+      CircleCollection.update_coordinates_of_collection(conn, 5, 0, 150);
 
       CircleCollection.delete_object_from_collection(conn, 6, new int[] {0, 4}, 6);
       CircleCollection.update_coordinates_of_collection(conn, 6, 30, 55);
@@ -132,9 +132,6 @@ public class InitDB {
       Rectangle.insert_new_rectangle(conn, "Z", "T1", new double[] {5, 5, 120, 120});
       Circle.insert_new_circle(conn, "X", "T2", new double[] {30, 30, 20});
 
-      conn.commit();
-      conn.setAutoCommit(previous_auto_commit);
-      conn.close();
     } catch (SQLException | IOException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
     }
@@ -192,7 +189,7 @@ public class InitDB {
       double diameter = SpatialOperators.get_diameter_of_object_by_id(conn, 4);
       System.out.printf("DIAMETER = %g\n", diameter);
       double distance = SpatialOperators.get_distance_between_obejcts(conn, 4, 7);
-      System.out.printf("DIAMETER = %g\n", distance);
+      System.out.printf("DISTANCE = %g\n", distance);
 
       conn.commit();
       conn.setAutoCommit(previous_auto_commit);
