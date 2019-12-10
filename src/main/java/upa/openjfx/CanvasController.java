@@ -16,6 +16,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import upa.db.GeneralDB;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -114,8 +115,15 @@ public class CanvasController {
     }
   }
 
-  public int getObjectId(Node object){
+  public int getObjectId(Node object) {
     return objects.get(object);
+  }
+
+  public Node getObjectById(int id) {
+    for (HashMap.Entry<Node, Integer> entry : objects.entrySet()) {
+      if (entry.getValue() == id) return entry.getKey();
+    }
+    return null;
   }
 
   @FXML
@@ -265,7 +273,7 @@ public class CanvasController {
           if (this.mode.equals(Mode.workingMode.None.toString())) {
             try {
               sidePanel.setActiveNode(c, objects.get(c));
-            } catch (SQLException | IOException e) {
+            } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
           }
@@ -346,7 +354,7 @@ public class CanvasController {
           if (this.mode.equals(Mode.workingMode.None.toString())) {
             try {
               sidePanel.setActiveNode(c, objects.get(c));
-            } catch (SQLException | IOException e) {
+            } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
           }
@@ -507,7 +515,7 @@ public class CanvasController {
           if (this.mode.equals(Mode.workingMode.None.toString())) {
             try {
               sidePanel.setActiveNode(c, objects.get(c));
-            } catch (SQLException | IOException e) {
+            } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
           }
@@ -593,7 +601,7 @@ public class CanvasController {
           if (this.mode.equals(Mode.workingMode.None.toString())) {
             try {
               sidePanel.setActiveNode(c, objects.get(c));
-            } catch (SQLException | IOException e) {
+            } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
           }
@@ -745,7 +753,7 @@ public class CanvasController {
           if (this.mode.equals(Mode.workingMode.None.toString())) {
             try {
               sidePanel.setActiveNode(c, objects.get(c));
-            } catch (SQLException | IOException e) {
+            } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
           }
@@ -944,6 +952,9 @@ public class CanvasController {
 
     if (selected == null) {
       this.mode = Mode.workingMode.None.toString();
-    } else this.mode = selected.getText();
+    } else{
+      this.mode = selected.getText();
+      selectObject(null);
+    }
   }
 }

@@ -5,6 +5,10 @@ import javafx.geometry.Side;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 
+import javax.sql.ConnectionPoolDataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+
 public class FXMLController {
 
   @FXML private BorderPane mainPane;

@@ -1,37 +1,66 @@
 package upa.openjfx;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
+import javafx.scene.effect.ColorInput;
+import javafx.scene.effect.InnerShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import oracle.jdbc.pool.OracleDataSource;
+import org.apache.commons.lang3.ArrayUtils;
 import upa.db.GeneralDB;
 import upa.db.multimedia.DBImage;
+import upa.db.queries.Mask;
+import upa.db.queries.SpatialOperators;
 import upa.db.spatial.*;
+import upa.db.spatial.Point;
 
+import javax.print.DocFlavor;
+import java.awt.image.AreaAveragingScaleFilter;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
+
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.Vector;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SidePanelController {
-  @FXML private ImageView image;
+
   private ConnectingWindowController connection;
   private CanvasController canvas;
   private Node actualNode;
   private Vector<Integer> images_id;
   private HashMap<Node, Integer> objects;
+  private ArrayList<Integer> objects_with_effect;
+  private String[] node_types =
+      new String[] {"planets", "stars", "spaceships", "constellations", "meteorites", "satellites"};
+
+  @FXML private ImageView image;
+  @FXML private Label nameOfObject;
+  @FXML private Label typeOfObject;
+  @FXML private Label areaOfObject;
+  @FXML private Label diameterOfObject;
+  @FXML private Label lengthOfObject;
+  @FXML private MenuButton spatialMenu;
+  @FXML private MenuButton multimediaMenu;
+
+  public OracleDataSource getOds() {
+    return connection.ods;
+  }
 
   public static String getTypeOfObjectFromGroup(Group g) {
     Node n = g.getChildren().get(0);
@@ -49,6 +78,7 @@ public class SidePanelController {
   public void initialize() {
     images_id = new Vector<>();
     objects = new HashMap<>();
+    objects_with_effect = new ArrayList<>();
   }
 
   public void setConnectionController(ConnectingWindowController c) {
@@ -56,9 +86,33 @@ public class SidePanelController {
   }
 
   @FXML
-  public void loadInfoFromDb() {
-    Image img = new Image("file:../../../pisomka/img.png");
-    image.setImage(img);
+  public void refreshAction() {
+    for (int id : objects_with_effect) {
+      Node node = canvas.getObjectById(id);
+      if (node != null) {
+        node.setEffect(null);
+      }
+    }
+    objects_with_effect.clear();
+  }
+
+  @FXML
+  public void checkCurrentNode() {
+    if (actualNode == null) {
+      for (MenuItem item : multimediaMenu.getItems()) {
+        item.setDisable(true);
+      }
+      for (MenuItem item : spatialMenu.getItems()) {
+        item.setDisable(true);
+      }
+    } else {
+      for (MenuItem item : multimediaMenu.getItems()) {
+        item.setDisable(false);
+      }
+      for (MenuItem item : spatialMenu.getItems()) {
+        item.setDisable(false);
+      }
+    }
   }
 
   @FXML
@@ -70,20 +124,22 @@ public class SidePanelController {
         .getExtensionFilters()
         .addAll(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"));
     File selectedFile = fileChooser.showOpenDialog(stage);
-    Image img = new Image(selectedFile.toURI().toString());
-    image.setImage(img);
-    int id =
-        DBImage.save_image_from_file(
-            connection.ods.getConnection(), 0, selectedFile.getAbsolutePath());
-    objects.put(actualNode, id);
-    System.out.println(canvas.getObjectId(actualNode) + " = " + id);
-    SpatialObject.update_image_id_of_object(
-        connection.ods.getConnection(), canvas.getObjectId(actualNode), id);
+    if (selectedFile != null) {
+      Image img = new Image(selectedFile.toURI().toString());
+      image.setImage(img);
+      int id =
+          DBImage.save_image_from_file(
+              connection.ods.getConnection(), 0, selectedFile.getAbsolutePath());
+      objects.put(actualNode, id);
+      System.out.println(canvas.getObjectId(actualNode) + " = " + id);
+      SpatialObject.update_image_id_of_object(
+          connection.ods.getConnection(), canvas.getObjectId(actualNode), id, true);
+    }
   }
 
   @FXML
   public void DeleteImageFromDb() throws SQLException, GeneralDB.NotFoundException {
-    DBImage.delete_image(connection.ods.getConnection(), objects.get(actualNode));
+    DBImage.delete_image(connection.ods.getConnection(), objects.getOrDefault(actualNode, 0), true);
     objects.put(actualNode, 0);
     image.setImage(null);
   }
@@ -92,7 +148,13 @@ public class SidePanelController {
   public void RotateImage90() throws SQLException, GeneralDB.NotFoundException, IOException {
     Image img =
         DBImage.process_image(
-            connection.ods.getConnection(), objects.get(actualNode), "rotate", 90.0, 0.0, 0.0, 0.0);
+            connection.ods.getConnection(),
+            objects.getOrDefault(actualNode, 0),
+            "rotate",
+            90.0,
+            0.0,
+            0.0,
+            0.0);
     image.setImage(img);
   }
 
@@ -101,7 +163,7 @@ public class SidePanelController {
     Image img =
         DBImage.process_image(
             connection.ods.getConnection(),
-            objects.get(actualNode),
+            objects.getOrDefault(actualNode, 0),
             "rotate",
             180.0,
             0.0,
@@ -115,7 +177,7 @@ public class SidePanelController {
     Image img =
         DBImage.process_image(
             connection.ods.getConnection(),
-            objects.get(actualNode),
+            objects.getOrDefault(actualNode, 0),
             "rotate",
             270.0,
             0.0,
@@ -128,7 +190,13 @@ public class SidePanelController {
   public void MirrorImage() throws SQLException, GeneralDB.NotFoundException, IOException {
     Image img =
         DBImage.process_image(
-            connection.ods.getConnection(), objects.get(actualNode), "mirror", 0.0, 0.0, 0.0, 0.0);
+            connection.ods.getConnection(),
+            objects.getOrDefault(actualNode, 0),
+            "mirror",
+            0.0,
+            0.0,
+            0.0,
+            0.0);
     image.setImage(img);
   }
 
@@ -177,7 +245,8 @@ public class SidePanelController {
             return;
           }
 
-          if (n_x + n_width >= 0
+          if (image.getImage() != null
+              && n_x + n_width >= 0
               && n_x > 0
               && n_y > 0
               && n_x <= image.getImage().getWidth()
@@ -189,7 +258,7 @@ public class SidePanelController {
               Image img =
                   DBImage.process_image(
                       connection.ods.getConnection(),
-                      objects.get(actualNode),
+                      objects.getOrDefault(actualNode, 0),
                       "cut",
                       n_x,
                       n_y,
@@ -259,17 +328,18 @@ public class SidePanelController {
             alert.showAndWait();
           }
 
-          if ((n_xScale > 0
-                  && n_xScale <= image.getImage().getWidth()
-                  && n_yScale > 0
-                  && n_yScale <= image.getImage().getHeight()
-                  && !is_percentual)
-              || (is_percentual && n_xScale > 0)) {
+          if (image.getImage() != null
+              && ((n_xScale > 0
+                      && n_xScale <= image.getImage().getWidth()
+                      && n_yScale > 0
+                      && n_yScale <= image.getImage().getHeight()
+                      && !is_percentual)
+                  || (is_percentual && n_xScale > 0))) {
             try {
               Image img =
                   DBImage.process_image(
                       connection.ods.getConnection(),
-                      objects.get(actualNode),
+                      objects.getOrDefault(actualNode, 0),
                       scale,
                       n_xScale,
                       n_yScale,
@@ -313,7 +383,7 @@ public class SidePanelController {
     Image img =
         DBImage.process_image(
             connection.ods.getConnection(),
-            objects.get(actualNode),
+            objects.getOrDefault(actualNode, 0),
             "monochrome",
             0.0,
             0.0,
@@ -326,24 +396,559 @@ public class SidePanelController {
   public void findMostSimilar() throws SQLException, GeneralDB.NotFoundException, IOException {
     Image img =
         DBImage.find_most_similar_image(
-            connection.ods.getConnection(), objects.get(actualNode), 0.3, 0.3, 0.1, 0.3);
+            connection.ods.getConnection(),
+            objects.getOrDefault(actualNode, 0),
+            0.3,
+            0.3,
+            0.1,
+            0.3);
     image.setImage(img);
   }
 
-  public void setActiveNode(Node obj, Integer id) throws SQLException, IOException {
+  private String[] get_types_of_selected_nodes(
+      int start_idx, int end_idx, int[] results, String[] node_types) {
+    String[] selected_node_types = new String[node_types.length];
+    int idx = 0;
+    int node_idx = 0;
+    for (int i = start_idx; i < end_idx; i++, node_idx++) {
+      if (results[i] == 1) selected_node_types[idx++] = node_types[node_idx];
+    }
+    for (int i = idx; i < node_types.length; i++) {
+      selected_node_types = ArrayUtils.removeElement(selected_node_types, null);
+    }
+    return selected_node_types;
+  }
+
+  private void findNearestNodes(String mode) {
+    Dialog<int[]> dialog = new Dialog<>();
+    dialog.setTitle("Find N nearest nodes");
+    DialogPane dialogPane = dialog.getDialogPane();
+    dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+    TextField n = new TextField();
+    TextField d = new TextField();
+    CheckBox p = new CheckBox("planets");
+    CheckBox s = new CheckBox("stars");
+    CheckBox ss = new CheckBox("spaceships");
+    CheckBox c = new CheckBox("constellations");
+    CheckBox m = new CheckBox("meteorites");
+    CheckBox t = new CheckBox("satellites");
+    CheckBox p_o = new CheckBox("planets");
+    CheckBox s_o = new CheckBox("stars");
+    CheckBox ss_o = new CheckBox("spaceships");
+    CheckBox c_o = new CheckBox("constellations");
+    CheckBox m_o = new CheckBox("meteorites");
+    CheckBox t_o = new CheckBox("satellites");
+    if (mode.equals("by_id")) {
+      dialog.setHeaderText("Please specify N, maximal distance and node types to find.");
+      dialogPane.setContent(new VBox(8, n, d, new HBox(4, p, s, ss, c, m, t)));
+    } else {
+      dialog.setHeaderText(
+          "Please specify set of nodes types to which will be finding the N nearest nodes of given types in distance d.");
+      dialogPane.setContent(
+          new VBox(
+              8, new HBox(4, p_o, s_o, ss_o, c_o, m_o, t_o), n, d, new HBox(4, p, s, ss, c, m, t)));
+    }
+    n.setPromptText("n");
+    d.setPromptText("d");
+
+    dialog.setResultConverter(
+        (ButtonType button) -> {
+          if (button == ButtonType.OK) {
+            refreshAction();
+            try {
+              int[] results = {
+                Integer.parseInt(n.getText()),
+                Integer.parseInt(d.getText()),
+                p.isSelected() ? 1 : 0,
+                s.isSelected() ? 1 : 0,
+                ss.isSelected() ? 1 : 0,
+                c.isSelected() ? 1 : 0,
+                m.isSelected() ? 1 : 0,
+                t.isSelected() ? 1 : 0,
+              };
+              if (mode.equals("by_id")) {
+                return results;
+              } else {
+                results =
+                    ArrayUtils.addAll(
+                        results,
+                        p_o.isSelected() ? 1 : 0,
+                        s_o.isSelected() ? 1 : 0,
+                        ss_o.isSelected() ? 1 : 0,
+                        c_o.isSelected() ? 1 : 0,
+                        m_o.isSelected() ? 1 : 0,
+                        t_o.isSelected() ? 1 : 0);
+                System.out.println(Arrays.toString(results));
+                return results;
+              }
+            } catch (NumberFormatException e) {
+              Alert alert = new Alert(Alert.AlertType.ERROR);
+              alert.setTitle("Invalid parameters of operation");
+              alert.setHeaderText("The parameters count (n) and distance (d) must be numbers!");
+              alert.setContentText("Try again!");
+              alert.showAndWait();
+            }
+          }
+          return null;
+        });
+    Optional<int[]> optionalResult = dialog.showAndWait();
+    optionalResult.ifPresent(
+        (int[] results) -> {
+          String[] selected_node_types;
+          selected_node_types =
+              get_types_of_selected_nodes(2, 2 + node_types.length, results, node_types);
+          String[] selected_object_types = new String[0];
+          if (mode.equals("by_types")) {
+            selected_object_types =
+                get_types_of_selected_nodes(
+                    2 + node_types.length, 2 + 2 * node_types.length, results, node_types);
+          }
+          try {
+            if (mode.equals("by_id")) {
+              objects_with_effect =
+                  (ArrayList<Integer>)
+                      Arrays.stream(
+                              SpatialOperators.get_nearest_neighbours_of_object_by_id(
+                                  connection.ods.getConnection(),
+                                  canvas.getObjectId(actualNode),
+                                  results[0],
+                                  results[1],
+                                  selected_node_types))
+                          .boxed()
+                          .collect(Collectors.toList());
+            } else {
+              System.out.println(Arrays.toString(selected_object_types));
+              System.out.println(Arrays.toString(selected_node_types));
+              objects_with_effect =
+                  (ArrayList<Integer>)
+                      Arrays.stream(
+                              SpatialOperators.get_nearest_neighbours_of_object_by_type(
+                                  connection.ods.getConnection(),
+                                  selected_object_types,
+                                  results[0],
+                                  results[1],
+                                  selected_node_types))
+                          .boxed()
+                          .collect(Collectors.toList());
+            }
+          } catch (SQLException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Operation was not successful.");
+            alert.setHeaderText("The finding of N nearest nodes was not successful!");
+            alert.setContentText("Try again!");
+            alert.showAndWait();
+          }
+          for (int id : objects_with_effect) {
+            Node node = canvas.getObjectById(id);
+            if (node != null) {
+              InnerShadow innerShadow = new InnerShadow();
+
+              // Setting the offset values of the inner shadow
+              innerShadow.setOffsetX(800);
+              innerShadow.setOffsetY(600);
+
+              // Setting the color of the inner shadow
+              innerShadow.setColor(Color.LIGHTBLUE);
+
+              // Applying inner shadow effect to the circle
+              node.setEffect(innerShadow);
+              node.toFront();
+              System.out.println(node);
+            }
+          }
+        });
+  }
+
+  @FXML
+  public void nearestOfCurrentNode() {
+    findNearestNodes("by_id");
+  }
+
+  @FXML
+  public void nearestOfSet() {
+    findNearestNodes("by_types");
+  }
+
+  private void getrelationOfCurrentNode(String mode) {
+    Dialog<int[]> dialog = new Dialog<>();
+    dialog.setTitle("Find relation between nodes");
+    DialogPane dialogPane = dialog.getDialogPane();
+    dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+    CheckBox p = new CheckBox("planets");
+    CheckBox s = new CheckBox("stars");
+    CheckBox ss = new CheckBox("spaceships");
+    CheckBox c = new CheckBox("constellations");
+    CheckBox m = new CheckBox("meteorites");
+    CheckBox t = new CheckBox("satellites");
+    CheckBox p_o = new CheckBox("planets");
+    CheckBox s_o = new CheckBox("stars");
+    CheckBox ss_o = new CheckBox("spaceships");
+    CheckBox c_o = new CheckBox("constellations");
+    CheckBox m_o = new CheckBox("meteorites");
+    CheckBox t_o = new CheckBox("satellites");
+    CheckBox touch = new CheckBox("touch");
+    CheckBox equal = new CheckBox("equal to");
+    CheckBox inside = new CheckBox("are inside");
+    CheckBox coverdby = new CheckBox("are covered by");
+    CheckBox contains = new CheckBox("contain");
+    CheckBox covers = new CheckBox("cover");
+    CheckBox anyinteract = new CheckBox("interact");
+    CheckBox on = new CheckBox("are on");
+    CheckBox disjoint = new CheckBox("disjoint");
+    CheckBox intersect = new CheckBox("intersect");
+    Label subtitle_1 = new Label("I want to get all the:");
+    subtitle_1.setStyle("-fx-font-weight: bold");
+    Label subtitle_2 = new Label("that:");
+    subtitle_2.setStyle("-fx-font-weight: bold");
+    Label subtitle_3 = new Label("the current node.");
+    subtitle_3.setStyle("-fx-font-weight: bold");
+    dialog.setHeaderText("Please specify properties to find relations between nodes.");
+    if (mode.equals("of_node")) {
+      dialogPane.setContent(
+          new VBox(
+              8,
+              subtitle_1,
+              new HBox(4, p, s, ss, c, m, t),
+              subtitle_2,
+              new HBox(
+                  4,
+                  contains,
+                  touch,
+                  equal,
+                  inside,
+                  coverdby,
+                  covers,
+                  anyinteract,
+                  on,
+                  disjoint,
+                  intersect),
+              subtitle_3));
+    } else {
+      subtitle_3.setText("to all:");
+      dialogPane.setContent(
+          new VBox(
+              8,
+              subtitle_1,
+              new HBox(4, p, s, ss, c, m, t),
+              subtitle_2,
+              new HBox(
+                  4,
+                  contains,
+                  touch,
+                  equal,
+                  inside,
+                  coverdby,
+                  covers,
+                  anyinteract,
+                  on,
+                  disjoint,
+                  intersect),
+              subtitle_3,
+              new HBox(4, p_o, s_o, ss_o, c_o, m_o, t_o)));
+    }
+
+    dialog.setResultConverter(
+        (ButtonType button) -> {
+          if (button == ButtonType.OK) {
+            refreshAction();
+            int[] results =
+                new int[] {
+                  p.isSelected() ? 1 : 0,
+                  s.isSelected() ? 1 : 0,
+                  ss.isSelected() ? 1 : 0,
+                  c.isSelected() ? 1 : 0,
+                  m.isSelected() ? 1 : 0,
+                  t.isSelected() ? 1 : 0,
+                  touch.isSelected() ? 1 : 0,
+                  disjoint.isSelected() ? 1 : 0,
+                  intersect.isSelected() ? 1 : 0,
+                  equal.isSelected() ? 1 : 0,
+                  inside.isSelected() ? 1 : 0,
+                  coverdby.isSelected() ? 1 : 0,
+                  contains.isSelected() ? 1 : 0,
+                  covers.isSelected() ? 1 : 0,
+                  anyinteract.isSelected() ? 1 : 0,
+                  on.isSelected() ? 1 : 0
+                };
+            if (mode.equals("of_node")) {
+              return results;
+            } else {
+              return ArrayUtils.addAll(
+                  results,
+                  p_o.isSelected() ? 1 : 0,
+                  s_o.isSelected() ? 1 : 0,
+                  ss_o.isSelected() ? 1 : 0,
+                  c_o.isSelected() ? 1 : 0,
+                  m_o.isSelected() ? 1 : 0,
+                  t_o.isSelected() ? 1 : 0);
+            }
+          }
+          return null;
+        });
+    Optional<int[]> optionalResult = dialog.showAndWait();
+    optionalResult.ifPresent(
+        (int[] results) -> {
+          String[] selected_node_types;
+          selected_node_types =
+              get_types_of_selected_nodes(0, node_types.length, results, node_types);
+
+          ArrayList<Mask> new_masks = new ArrayList<>();
+          int idx = 0;
+          for (int i = node_types.length; i < node_types.length + Mask.values().length; i++) {
+            if (results[i] == 1) new_masks.add(Mask.values()[idx]);
+            idx++;
+          }
+
+          Mask[] selected_mask = new Mask[new_masks.size()];
+          for (int i = 0; i < new_masks.size(); i++) {
+            selected_mask[i] = new_masks.get(i);
+          }
+
+          String[] selected_object_types = new String[0];
+          if (mode.equals("of_type")) {
+            selected_object_types =
+                get_types_of_selected_nodes(
+                    node_types.length + Mask.values().length, results.length, results, node_types);
+          }
+
+          try {
+            if (mode.equals("of_node")) {
+              objects_with_effect =
+                  (ArrayList<Integer>)
+                      Arrays.stream(
+                              SpatialOperators.get_related_objects_of_object_by_id(
+                                  connection.ods.getConnection(),
+                                  canvas.getObjectId(actualNode),
+                                  selected_mask,
+                                  selected_node_types))
+                          .boxed()
+                          .collect(Collectors.toList());
+            } else {
+              objects_with_effect =
+                  (ArrayList<Integer>)
+                      Arrays.stream(
+                              SpatialOperators.get_related_objects_of_object_by_type(
+                                  connection.ods.getConnection(),
+                                  selected_object_types,
+                                  selected_mask,
+                                  selected_node_types))
+                          .boxed()
+                          .collect(Collectors.toList());
+            }
+            System.out.println(objects_with_effect);
+          } catch (SQLException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Operation was not successful.");
+            alert.setHeaderText("The finding relation between nodes was not successful!");
+            alert.setContentText("Try again!");
+            alert.showAndWait();
+          }
+          for (int id : objects_with_effect) {
+            Node node = canvas.getObjectById(id);
+            if (node != null) {
+              InnerShadow innerShadow = new InnerShadow();
+
+              // Setting the offset values of the inner shadow
+              innerShadow.setOffsetX(800);
+              innerShadow.setOffsetY(600);
+
+              // Setting the color of the inner shadow
+              innerShadow.setColor(Color.LIGHTBLUE);
+
+              // Applying inner shadow effect to the circle
+              node.setEffect(innerShadow);
+              node.toFront();
+              System.out.println(node);
+            }
+          }
+        });
+  }
+
+  @FXML
+  public void relationOfCurrentNode() {
+    getrelationOfCurrentNode("of_node");
+  }
+
+  @FXML
+  public void relationOfSet() {
+    getrelationOfCurrentNode("of_type");
+  }
+
+  private void findInteractObject(boolean of_node) {
+    Dialog<int[]> dialog = new Dialog<>();
+    dialog.setTitle("Find related nodes");
+    DialogPane dialogPane = dialog.getDialogPane();
+    dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+    CheckBox p = new CheckBox("planets");
+    CheckBox s = new CheckBox("stars");
+    CheckBox ss = new CheckBox("spaceships");
+    CheckBox c = new CheckBox("constellations");
+    CheckBox m = new CheckBox("meteorites");
+    CheckBox t = new CheckBox("satellites");
+    CheckBox p_o = new CheckBox("planets");
+    CheckBox s_o = new CheckBox("stars");
+    CheckBox ss_o = new CheckBox("spaceships");
+    CheckBox c_o = new CheckBox("constellations");
+    CheckBox m_o = new CheckBox("meteorites");
+    CheckBox t_o = new CheckBox("satellites");
+    Label subtitle_1 = new Label("I want to get all the:");
+    subtitle_1.setStyle("-fx-font-weight: bold");
+    Label subtitle_2 = new Label("that have some interaction with:");
+    subtitle_2.setStyle("-fx-font-weight: bold");
+    dialog.setHeaderText("Please specify properties to test interaction between nodes.");
+    if (of_node) {
+      subtitle_1.setText("I want to get all the:");
+      subtitle_2.setText("that have some interaction with current node.");
+      dialogPane.setContent(new VBox(8, subtitle_1, new HBox(4, p, s, ss, c, m, t), subtitle_2));
+    } else {
+      dialog.setHeaderText("Please specify set of nodes types to test interaction.");
+      dialogPane.setContent(
+          new VBox(
+              8,
+              subtitle_1,
+              new HBox(4, p_o, s_o, ss_o, c_o, m_o, t_o),
+              subtitle_2,
+              new HBox(4, p, s, ss, c, m, t)));
+    }
+
+    dialog.setResultConverter(
+            (ButtonType button) -> {
+              if (button == ButtonType.OK) {
+                refreshAction();
+                int[] results =
+                        new int[] {
+                                p.isSelected() ? 1 : 0,
+                                s.isSelected() ? 1 : 0,
+                                ss.isSelected() ? 1 : 0,
+                                c.isSelected() ? 1 : 0,
+                                m.isSelected() ? 1 : 0,
+                                t.isSelected() ? 1 : 0,
+                        };
+                if (of_node) {
+                  return results;
+                } else {
+                  return ArrayUtils.addAll(
+                          results,
+                          p_o.isSelected() ? 1 : 0,
+                          s_o.isSelected() ? 1 : 0,
+                          ss_o.isSelected() ? 1 : 0,
+                          c_o.isSelected() ? 1 : 0,
+                          m_o.isSelected() ? 1 : 0,
+                          t_o.isSelected() ? 1 : 0);
+                }
+              }
+              return null;
+            });
+
+    Optional<int[]> optionalResult = dialog.showAndWait();
+    optionalResult.ifPresent(
+            (int[] results) -> {
+              String[] selected_node_types;
+              selected_node_types =
+                      get_types_of_selected_nodes(0, node_types.length, results, node_types);
+
+              String[] selected_object_types = new String[0];
+              if (!of_node) {
+                selected_object_types =
+                        get_types_of_selected_nodes(
+                                node_types.length, 2 * node_types.length, results, node_types);
+              }
+              try {
+                if (of_node) {
+                  objects_with_effect =
+                          (ArrayList<Integer>)
+                                  Arrays.stream(
+                                          SpatialOperators.get_interacted_objects_with_object_by_id(
+                                                  connection.ods.getConnection(),
+                                                  canvas.getObjectId(actualNode),
+                                                  selected_node_types))
+                                          .boxed()
+                                          .collect(Collectors.toList());
+                } else {
+                  System.out.println(Arrays.toString(selected_object_types));
+                  System.out.println(Arrays.toString(selected_node_types));
+                  objects_with_effect =
+                          (ArrayList<Integer>)
+                                  Arrays.stream(
+                                          SpatialOperators.get_interacted_objects_with_object_by_type(
+                                                  connection.ods.getConnection(),
+                                                  selected_object_types,
+                                                  selected_node_types))
+                                          .boxed()
+                                          .collect(Collectors.toList());
+                }
+              } catch (SQLException e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Operation was not successful.");
+                alert.setHeaderText("The finding of interacted objects was not successful!");
+                alert.setContentText("Try again!");
+                alert.showAndWait();
+              }
+              for (int id : objects_with_effect) {
+                Node node = canvas.getObjectById(id);
+                if (node != null) {
+                  InnerShadow innerShadow = new InnerShadow();
+
+                  // Setting the offset values of the inner shadow
+                  innerShadow.setOffsetX(800);
+                  innerShadow.setOffsetY(600);
+
+                  // Setting the color of the inner shadow
+                  innerShadow.setColor(Color.LIGHTBLUE);
+
+                  // Applying inner shadow effect to the circle
+                  node.setEffect(innerShadow);
+                  node.toFront();
+                  System.out.println(node);
+                }
+              }
+            });
+  }
+
+  @FXML
+  public void findInteractObjectOfTypes() {
+    findInteractObject(false);
+  }
+
+  @FXML
+  public void findInteractObjectOfNode() {
+    findInteractObject(true);
+  }
+
+  public void setActiveNode(Node obj, Integer id)
+      throws SQLException, IOException, GeneralDB.NotFoundException {
     System.out.println(actualNode);
     actualNode = obj;
     if (objects.containsKey(actualNode)) {
       try {
-        image.setImage(DBImage.load_image(connection.ods.getConnection(), objects.get(actualNode)));
+        image.setImage(
+            DBImage.load_image(
+                connection.ods.getConnection(), objects.getOrDefault(actualNode, 0)));
       } catch (GeneralDB.NotFoundException e) {
         image.setImage(null);
       }
     } else {
       image.setImage(null);
     }
-
-    //    loadInfoFromDb(obj, );
+    String[] name_and_type =
+        SpatialObject.select_name_and_type_of_object(
+            connection.ods.getConnection(), canvas.getObjectId(actualNode));
+    double area =
+        SpatialOperators.get_area_of_object_by_id(
+            connection.ods.getConnection(), canvas.getObjectId(actualNode));
+    double diameter =
+        SpatialOperators.get_diameter_of_object_by_id(
+            connection.ods.getConnection(), canvas.getObjectId(actualNode));
+    double length =
+        SpatialOperators.get_length_of_object_by_id(
+            connection.ods.getConnection(), canvas.getObjectId(actualNode));
+    nameOfObject.setText(name_and_type[0]);
+    typeOfObject.setText(name_and_type[1]);
+    areaOfObject.setText(Double.toString(area));
+    diameterOfObject.setText(Double.toString(diameter));
+    lengthOfObject.setText(Double.toString(length));
+    //    loadInfoFr
+    //    omDb(obj, );
   }
 
   public void saveStateToDb(
@@ -367,7 +972,7 @@ public class SidePanelController {
               upa.db.spatial.Rectangle.insert_new_rectangle(
                   connection.ods.getConnection(),
                   "LodA",
-                  "Lod",
+                  "spaceships",
                   new double[] {
                     r.getX(),
                     translateYCordForDb(r.getY()),
@@ -382,7 +987,7 @@ public class SidePanelController {
               upa.db.spatial.Circle.insert_new_circle(
                   connection.ods.getConnection(),
                   "PlanetaA",
-                  "Planeta",
+                  "planets",
                   new double[] {
                     c.getCenterX() - c.getRadius(),
                     translateYCordForDb(c.getCenterY() + c.getRadius()),
@@ -396,7 +1001,7 @@ public class SidePanelController {
               upa.db.spatial.Point.insert_new_point(
                   connection.ods.getConnection(),
                   "HviezdaA",
-                  "Hviezda",
+                  "stars",
                   new double[] {p.getCenterX(), translateYCordForDb(p.getCenterY())});
           entry.setValue(id);
           break;
@@ -410,7 +1015,7 @@ public class SidePanelController {
           }
           id =
               upa.db.spatial.MultiPoint.insert_new_multipoint(
-                  connection.ods.getConnection(), "SuhvezdieA", "Suhvezdie", points);
+                  connection.ods.getConnection(), "SuhvezdieA", "constellations", points);
           entry.setValue(id);
           break;
         case "Polyline":
@@ -425,7 +1030,7 @@ public class SidePanelController {
           }
           id =
               upa.db.spatial.StraightLineString.insert_new_line_string(
-                  connection.ods.getConnection(), "SatelityA", "Satelity", points);
+                  connection.ods.getConnection(), "SatelityA", "satellites", points);
           entry.setValue(id);
           break;
         case "Collection":
@@ -436,7 +1041,7 @@ public class SidePanelController {
               upa.db.spatial.CircleCollection.insert_new_collection_to_db(
                   connection.ods.getConnection(),
                   "MeteorityA",
-                  "Meteority",
+                  "meteorites",
                   new double[] {
                     firstCircle.getCenterX() - firstCircle.getRadius(),
                     translateYCordForDb(firstCircle.getCenterY() + firstCircle.getRadius()),

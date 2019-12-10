@@ -2,9 +2,11 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.image.Image?>
@@ -13,7 +15,10 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="640.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="upa.openjfx.SidePanelController">
    <children>
@@ -21,7 +26,7 @@
          <top>
             <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
               <items>
-                  <MenuButton mnemonicParsing="false" text="Multimedia">
+                  <MenuButton fx:id="multimediaMenu" mnemonicParsing="false" onMouseReleased="#checkCurrentNode" text="Multimedia">
                     <items>
                       <MenuItem mnemonicParsing="false" onAction="#SaveImageToDb" text="Add image" />
                       <MenuItem mnemonicParsing="false" onAction="#DeleteImageFromDb" text="Delete image" />
@@ -29,6 +34,7 @@
                         <Menu mnemonicParsing="false" text="Rotate by">
                           <items>
                             <MenuItem mnemonicParsing="false" onAction="#RotateImage90" text="90 degrees" />
+                              <MenuItem mnemonicParsing="false" onAction="#RotateImage180" text="180 degrees" />
                               <MenuItem mnemonicParsing="false" onAction="#RotateImage270" text="270 degrees" />
                           </items>
                         </Menu>
@@ -45,13 +51,29 @@
                         <MenuItem mnemonicParsing="false" onAction="#findMostSimilar" text="Find most similar" />
                     </items>
                   </MenuButton>
-                  <MenuButton mnemonicParsing="false" text="Spatial">
+                  <MenuButton fx:id="spatialMenu" mnemonicParsing="false" onAction="#checkCurrentNode" onMouseClicked="#checkCurrentNode" text="Spatial">
                      <items>
-                        <MenuItem mnemonicParsing="false" text="Edit" />
-                        <MenuItem mnemonicParsing="false" text="Find N nearest" />
+                        <Menu mnemonicParsing="false" text="Find N nearest of">
+                          <items>
+                            <MenuItem mnemonicParsing="false" onAction="#nearestOfCurrentNode" text="current object" />
+                              <MenuItem mnemonicParsing="false" onAction="#nearestOfSet" text="set of object types" />
+                          </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Find relations of">
+                           <items>
+                              <MenuItem mnemonicParsing="false" onAction="#relationOfCurrentNode" text="current object" />
+                              <MenuItem mnemonicParsing="false" onAction="#relationOfSet" text="set of object types" />
+                           </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Find interact objects of">
+                           <items>
+                              <MenuItem mnemonicParsing="false" onAction="#findInteractObjectOfNode" text="current object" />
+                              <MenuItem mnemonicParsing="false" onAction="#findInteractObjectOfTypes" text="set of object types" />
+                           </items>
+                        </Menu>
                      </items>
                   </MenuButton>
-                  <Button mnemonicParsing="false" onAction="#loadInfoFromDb" text="load" />
+                  <Button mnemonicParsing="false" onAction="#refreshAction" text="Refresh" />
               </items>
             </ToolBar>
          </top>
@@ -62,6 +84,7 @@
                </columnConstraints>
                <rowConstraints>
                   <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="200.0" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="200.0" vgrow="SOMETIMES" />
                </rowConstraints>
                <children>
                   <ImageView fx:id="image" fitHeight="200.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true">
@@ -69,6 +92,123 @@
                         <Image url="@../../../../../../../../pisomka/img.png" />
                      </image>
                   </ImageView>
+                  <VBox alignment="CENTER" prefHeight="300.0" prefWidth="100.0" GridPane.rowIndex="1">
+                     <children>
+                        <Separator maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="0.0" prefWidth="400.0" valignment="TOP">
+                           <VBox.margin>
+                              <Insets top="10.0" />
+                           </VBox.margin>
+                        </Separator>
+                        <Label maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" text="Spatial info">
+                           <font>
+                              <Font name="System Bold" size="20.0" />
+                           </font>
+                           <VBox.margin>
+                              <Insets top="5.0" />
+                           </VBox.margin>
+                        </Label>
+                        <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Label text="Name: ">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Label fx:id="nameOfObject">
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                                 <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Label text="Type of object:">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Label fx:id="typeOfObject">
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                                 <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Label text="Area:">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Label fx:id="areaOfObject">
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                                 <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="91.0" prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Label text="Diameter: ">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Label fx:id="diameterOfObject">
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                                 <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="114.0" prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Label text="Length: ">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Label fx:id="lengthOfObject">
+                                 <HBox.margin>
+                                    <Insets left="10.0" top="5.0" />
+                                 </HBox.margin>
+                                 <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
                </children>
                <padding>
                   <Insets bottom="5.0" top="5.0" />

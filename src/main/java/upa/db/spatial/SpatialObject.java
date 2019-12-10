@@ -20,9 +20,14 @@ public class SpatialObject extends GeneralDB {
       "INSERT INTO Village (o_name, o_type, geometry) VALUES (?, ?, ?)";
   private static final String SQL_SELECT_LAST_OBJECT_ID = "SELECT MAX(o_id) FROM Village";
   private static final String SQL_DELETE_OBJECT = "DELETE FROM Village WHERE o_id = ?";
-  private static final String SQL_UPDATE_IMAGE_ID = "UPDATE Village SET image_id = ? WHERE o_id = ?";
-  private static final String SQL_SELECT_IMAGE_ID_BY_OBJECT_ID = "SELECT image_id FROM Village WHERE o_id = ?";
-  private static final String SQL_SELECT_OBJECT_ID_BY_IMAGE_ID = "SELECT o_id FROM Village WHERE image_id = ?";
+  private static final String SQL_UPDATE_IMAGE_ID =
+      "UPDATE Village SET image_id = ? WHERE o_id = ?";
+  private static final String SQL_SELECT_IMAGE_ID_BY_OBJECT_ID =
+      "SELECT image_id FROM Village WHERE o_id = ?";
+  private static final String SQL_SELECT_OBJECT_ID_BY_IMAGE_ID =
+      "SELECT o_id FROM Village WHERE image_id = ?";
+  private static final String SQL_SELECT_OBJECT_TYPE_AND_NAME =
+      "SELECT o_name, o_type FROM Village WHERE o_id = ?";
 
   protected static void update_geometry_of_object(Connection conn, int o_id, JGeometry j_geom)
       throws Exception {
@@ -47,16 +52,20 @@ public class SpatialObject extends GeneralDB {
     return get_last_inserted_id(conn, SQL_SELECT_LAST_OBJECT_ID);
   }
 
-  public static void update_image_id_of_object(Connection conn, int o_id, int image_id) throws SQLException {
+  public static void update_image_id_of_object(Connection conn, int o_id, int image_id, boolean close_conn)
+      throws SQLException {
     try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_UPDATE_IMAGE_ID)) {
       prepared_statement.setInt(1, image_id);
       prepared_statement.setInt(2, o_id);
       prepared_statement.executeUpdate();
+      if (close_conn) conn.close();
     }
   }
 
-  public static int select_image_id_by_object(Connection conn, int o_id) throws SQLException, NotFoundException {
-    try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_IMAGE_ID_BY_OBJECT_ID)) {
+  public static int select_image_id_by_object(Connection conn, int o_id)
+      throws SQLException, NotFoundException {
+    try (PreparedStatement prepared_statement =
+        conn.prepareStatement(SQL_SELECT_IMAGE_ID_BY_OBJECT_ID)) {
       prepared_statement.setInt(1, o_id);
       try (ResultSet result_set = prepared_statement.executeQuery()) {
         if (result_set.next()) {
@@ -69,8 +78,10 @@ public class SpatialObject extends GeneralDB {
     }
   }
 
-  public static int select_object_id_by_image(Connection conn, int image_id) throws SQLException, NotFoundException {
-    try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_OBJECT_ID_BY_IMAGE_ID)) {
+  public static int select_object_id_by_image(Connection conn, int image_id)
+      throws SQLException, NotFoundException {
+    try (PreparedStatement prepared_statement =
+        conn.prepareStatement(SQL_SELECT_OBJECT_ID_BY_IMAGE_ID)) {
       prepared_statement.setInt(1, image_id);
       try (ResultSet result_set = prepared_statement.executeQuery()) {
         if (result_set.next()) {
@@ -83,8 +94,29 @@ public class SpatialObject extends GeneralDB {
     }
   }
 
-  public static void delete_object(Connection conn, int o_id) throws SQLException, NotFoundException {
-    DBImage.delete_image(conn, select_image_id_by_object(conn, o_id));
+  public static String[] select_name_and_type_of_object(Connection conn, int o_id)
+      throws SQLException, NotFoundException {
+    try (PreparedStatement prepared_statement =
+        conn.prepareStatement(SQL_SELECT_OBJECT_TYPE_AND_NAME)) {
+      prepared_statement.setInt(1, o_id);
+      String[] name_and_type;
+      try (ResultSet result_set = prepared_statement.executeQuery()) {
+        if (result_set.next()) {
+          final OracleResultSet oracle_result_set = (OracleResultSet) result_set;
+          name_and_type =
+              new String[] {oracle_result_set.getString(1), oracle_result_set.getString(2)};
+        } else {
+          throw new NotFoundException();
+        }
+      }
+      conn.close();
+      return name_and_type;
+    }
+  }
+
+  public static void delete_object(Connection conn, int o_id)
+      throws SQLException, NotFoundException {
+    DBImage.delete_image(conn, select_image_id_by_object(conn, o_id), false);
     delete_object(conn, SQL_DELETE_OBJECT, o_id);
     conn.close();
   }
