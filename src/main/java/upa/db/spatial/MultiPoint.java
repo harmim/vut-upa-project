@@ -29,22 +29,27 @@ public class MultiPoint extends Collection {
     return ArrayUtils.toPrimitive(sdo_elem_info.toArray(new Integer[0]));
   }
 
-  private static void update_geometry_of_multipoint(Connection conn, int o_id, double[] points)
+  public static void update_geometry_of_multipoint(Connection conn, int o_id, double[] points)
           throws Exception {
     update_geometry_of_object(conn, o_id, create_geometry(points));
+    conn.close();
   }
 
   public static int insert_new_multipoint(
       Connection conn, String o_name, String o_type, double[] points) throws Exception {
-    return insert_new_object(conn, o_name, o_type, create_geometry(points));
+    int o_id = insert_new_object(conn, o_name, o_type, create_geometry(points));
+    conn.close();
+    return o_id;
   }
 
   public static void add_points_to_multipoint(Connection conn, int o_id, double[] points)
       throws Exception {
     update_geometry_of_multipoint(conn, o_id, add_points_to_collection(conn, o_id, points));
+    conn.close();
   }
 
    public static void delete_points_from_multipoint(Connection conn, int o_id, double[] points) throws Exception {
     update_geometry_of_multipoint(conn, o_id, delete_points_from_collection(conn, o_id, points));
+    conn.close();
    }
 }

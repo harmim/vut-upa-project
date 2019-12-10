@@ -3,6 +3,8 @@ package upa.db.spatial;
 import oracle.spatial.geometry.JGeometry;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.awt.*;
+import java.security.spec.RSAOtherPrimeInfo;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,9 +65,24 @@ public class CircleCollection extends Collection {
     return new double[] {x_start, y_start};
   }
 
-  private static double[] compute_centers_of_circle(
+  private static double[] compute_centers_of_circle(double[] first_center, int idx) {
+    double[] circle_center;
+    if (is_horizontal) {
+      circle_center =
+          new double[] {
+            first_center[0] + idx * CIRCLE_SEGMENT_LENGTH * collection_data.get(2), first_center[1]
+          };
+    } else {
+      circle_center =
+          new double[] {
+            first_center[0], first_center[1] + idx * CIRCLE_SEGMENT_LENGTH * collection_data.get(2)
+          };
+    }
+    return circle_center;
+  }
+
+  private static double[] compute_first_center_of_circle(
       double x_start, double y_start, double r, int idx) {
-    r = collection_data.get(2);
     if (is_horizontal) {
       x_start = x_start + (0.5 * r) + (idx * CIRCLE_SEGMENT_LENGTH * r);
       y_start = y_start + r / 2;
@@ -76,22 +93,23 @@ public class CircleCollection extends Collection {
     return new double[] {x_start, y_start};
   }
 
-  private static int compute_order_number_of_circle(
-      ArrayList<Double> sdo_points_arr, double r, int i) {
-    int old_idx;
-    if (is_horizontal) {
-      old_idx =
-          (int)
-              ((sdo_points_arr.get(i) - r / 2 - collection_data.get(0))
-                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
-    } else {
-      old_idx =
-          (int)
-              ((sdo_points_arr.get(i + 1) - collection_data.get(1))
-                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
-    }
-    return old_idx;
-  }
+//  private static int compute_order_number_of_circle(
+//      ArrayList<Double> sdo_points_arr, double r, int i) {
+//    int old_idx;
+//    if (is_horizontal) {
+//      old_idx =
+//          (int)
+//              ((sdo_points_arr.get(i) - r / 2 - collection_data.get(0))
+//                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
+//    } else {
+//      old_idx =
+//          (int)
+//              ((sdo_points_arr.get(i + 1) - collection_data.get(1))
+//                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
+//    }
+//    System.out.println("NO OF CIRCLE:" + old_idx);
+//    return old_idx;
+//  }
 
   public static void compute_coordinates_of_disjoint_circles(
       int n, double x_start, double y_start, double r) {
@@ -131,6 +149,7 @@ public class CircleCollection extends Collection {
         n,
         CircleCollectionDB.SQL_INSERT_COLLECTION);
     flush_arrays();
+    conn.close();
     return o_id;
   }
 
@@ -147,7 +166,7 @@ public class CircleCollection extends Collection {
     sdo_points =
         (ArrayList<Double>)
             Arrays.stream(geometry.getOrdinatesArray()).boxed().collect(Collectors.toList());
-    is_horizontal = get_distribution_of_collection(geometry.getOrdinatesArray());
+    is_horizontal = true;
   }
 
   private static void update_geometry_of_collection(Connection conn, int o_id) throws Exception {
@@ -168,12 +187,14 @@ public class CircleCollection extends Collection {
         sdo_elem_info.size() / SDO_ELEM_SIZE,
         CircleCollectionDB.SQL_UPDATE_COLLECTION);
     flush_arrays();
+    conn.close();
   }
 
   public static void update_coordinates_of_collection(
-      Connection conn, int o_id, double x_start, double y_start) throws Exception {
+      Connection conn, int o_id, double x_start, double y_start, int[] current_circles)
+      throws Exception {
     set_geometry_properties(conn, o_id);
-    update_object_coordinates(x_start, y_start);
+    update_object_coordinates(x_start, y_start, current_circles);
     update_geometry_of_collection(conn, o_id);
     CircleCollectionDB.update_data_collection(
         conn,
@@ -184,15 +205,22 @@ public class CircleCollection extends Collection {
         sdo_elem_info.size() / SDO_ELEM_SIZE,
         CircleCollectionDB.SQL_UPDATE_COLLECTION);
     flush_arrays();
+    conn.close();
   }
 
   public static void add_circles_to_collection(Connection conn, int o_id, int[] idxs)
       throws Exception {
     set_geometry_properties(conn, o_id);
     double r = (sdo_points.get(2) - sdo_points.get(0)) * 2;
+    double[] circle_center;
+    double[] first_circle_center =
+            compute_first_center_of_circle(collection_data.get(0), collection_data.get(1), r, 0);
     for (int idx : idxs) {
-      double[] circle_center =
-          compute_centers_of_circle(collection_data.get(0), collection_data.get(1), r, idx);
+      if (idx == 0) {
+        circle_center = first_circle_center;
+      } else {
+        circle_center = compute_centers_of_circle(first_circle_center, idx);
+      }
       double circle_x_start = circle_center[0] - r / 2;
       double circle_y_start = circle_center[1] - r / 2;
       fulfill_sdo_points(circle_x_start, circle_y_start, r, sdo_points.size());
@@ -210,23 +238,38 @@ public class CircleCollection extends Collection {
     }
     update_geometry_of_collection(conn, o_id);
     flush_arrays();
+    conn.close();
   }
 
-  private static void update_object_coordinates(double x_start, double y_start) {
+  private static void update_object_coordinates(
+      double x_start, double y_start, int[] current_circles) {
     double r = (sdo_points.get(2) - sdo_points.get(0)) * 2;
     ArrayList<Double> copy_sdo_points = new ArrayList<>(sdo_points);
     sdo_points.clear();
+    double[] first_circle_center = new double[0];
+    double[] circle_center;
+    int j = 0;
     for (int i = 0; i < copy_sdo_points.size(); i += SDO_ORD_SIZE) {
-      int idx = compute_order_number_of_circle(copy_sdo_points, r, i);
-      double[] circle_center = compute_centers_of_circle(x_start, y_start, r, idx);
+      int idx = current_circles[j++];
+      if (i == 0) {
+        first_circle_center = compute_first_center_of_circle(x_start, y_start, r, 0);
+        circle_center = first_circle_center;
+      } else {
+        circle_center = compute_centers_of_circle(first_circle_center, idx);
+      }
       double circle_x_start = circle_center[0] - r / 2;
       double circle_y_start = circle_center[1] - r / 2;
       fulfill_sdo_points(circle_x_start, circle_y_start, r, sdo_points.size());
     }
   }
 
-  private static boolean get_distribution_of_collection(double[] ord_array) {
-    return ord_array[0] != ord_array[SDO_ORD_SIZE];
+  //  private static boolean get_distribution_of_collection(double[] ord_array) {
+  //    return ord_array[0] != ord_array[SDO_ORD_SIZE];
+  //  }
+
+  public static void delete_circle_collection(Connection conn, int o_id) throws SQLException, NotFoundException {
+    CircleCollectionDB.delete_circle_collection_data(conn, o_id);
+    CircleCollection.delete_object(conn, o_id);
   }
 }
 
@@ -237,6 +280,7 @@ class CircleCollectionDB extends Collection {
       "UPDATE CircleCollection SET x_start = ?, y_start = ?, r0 = ?, n = ? WHERE c_id = ?";
   private static final String SQL_SELECT_COLLECTION_FOR_UPDATE =
       "SELECT x_start, y_start, r0, n FROM CircleCollection WHERE c_id = ?";
+  private static final String SQL_DELETE_COLLECTION = "DELETE FROM CircleCollection WHERE c_id = ?";
 
   public static void update_data_collection(
       Connection conn,
@@ -275,5 +319,9 @@ class CircleCollectionDB extends Collection {
         }
       }
     }
+  }
+
+  public static void delete_circle_collection_data(Connection conn, int c_id) throws SQLException {
+    delete_object(conn, SQL_DELETE_COLLECTION, c_id);
   }
 }

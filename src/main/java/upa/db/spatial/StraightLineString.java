@@ -22,20 +22,25 @@ public class StraightLineString extends Collection {
   public static void update_geometry_of_line_string(Connection conn, int o_id, double[] points)
       throws Exception {
     update_geometry_of_object(conn, o_id, create_geometry(points));
+    conn.close();
   }
 
   public static int insert_new_line_string(Connection conn, String o_name, String o_type, double[] points)
       throws Exception {
-    return insert_new_object(conn, o_name, o_type, create_geometry(points));
+    int o_id = insert_new_object(conn, o_name, o_type, create_geometry(points));
+    conn.close();
+    return o_id;
   }
 
   public static void add_points_to_line_string(Connection conn, int o_id, double[] points)
       throws Exception {
     update_geometry_of_line_string(conn, o_id, add_points_to_collection(conn, o_id, points));
+    conn.close();
   }
 
   public static void delete_points_from_line_string(Connection conn, int o_id, double[] points)
       throws Exception {
     update_geometry_of_line_string(conn, o_id, delete_points_from_collection(conn, o_id, points));
+    conn.close();
   }
 }

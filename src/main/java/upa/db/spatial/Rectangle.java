@@ -21,10 +21,13 @@ public class Rectangle extends SpatialObject {
   public static void update_geometry_of_rectangle(Connection conn, int o_id, double[] points)
       throws Exception {
     update_geometry_of_object(conn, o_id, create_geometry(points));
+    conn.close();
   }
 
   public static int insert_new_rectangle(Connection conn, String o_name, String o_type, double[] points)
       throws Exception {
-    return insert_new_object(conn, o_name, o_type, create_geometry(points));
+    int o_id = insert_new_object(conn, o_name, o_type, create_geometry(points));
+    conn.close();
+    return o_id;
   }
 };
