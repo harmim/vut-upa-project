@@ -14,15 +14,16 @@ public class Collection extends SpatialObject {
 
   public static void delete_object_from_collection(
       Connection conn, int o_id, int[] o_idxs, int o_length) throws Exception {
-    Arrays.sort(o_idxs);
+//    Arrays.sort(o_idxs);
     int removed_objects = 0;
     JGeometry geometry = select_geometry_for_update(conn, o_id);
     int[] elem_info = geometry.getElemInfo();
     double[] ord_array = geometry.getOrdinatesArray();
+    System.out.println(Arrays.toString(o_idxs));
     for (int object_idx : o_idxs) {
       elem_info = delete_elements_from_elem_info(elem_info, object_idx - removed_objects, o_length);
       ord_array = delete_elements_from_array(ord_array, object_idx - removed_objects, o_length);
-      removed_objects += 1;
+//      removed_objects += 1;
     }
     JGeometry new_geometry =
         new JGeometry(geometry.getType(), geometry.getSRID(), elem_info, ord_array);
