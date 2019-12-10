@@ -6,6 +6,7 @@ import oracle.jdbc.OraclePreparedStatement;
 import oracle.jdbc.OracleResultSet;
 import oracle.ord.im.OrdImage;
 import upa.db.GeneralDB;
+import upa.db.spatial.SpatialObject;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -59,6 +60,7 @@ public class DBImage extends GeneralDB {
       save_ord_image(conn, image_id, ord_image);
     } finally {
       conn.setAutoCommit(previous_auto_commit);
+      conn.close();
     }
     return image_id;
   }
@@ -93,19 +95,26 @@ public class DBImage extends GeneralDB {
     }
   }
 
-  public static void delete_image(Connection conn, int image_id) throws SQLException {
+  public static void delete_image(Connection conn, int image_id, boolean close_conn)
+      throws SQLException, NotFoundException {
+    SpatialObject.update_image_id_of_object(
+        conn, SpatialObject.select_object_id_by_image(conn, image_id), 0, false);
     delete_object(conn, SQL_DELETE_IMAGE, image_id);
+    if (close_conn) conn.close();
   }
 
-  private static Image convert_ord_image_to_image(OrdImage ord_image) throws IOException, SQLException {
-    BufferedImage buffered_image = ImageIO.read(new ByteArrayInputStream(ord_image.getDataInByteArray()));
+  private static Image convert_ord_image_to_image(OrdImage ord_image)
+      throws IOException, SQLException {
+    BufferedImage buffered_image =
+        ImageIO.read(new ByteArrayInputStream(ord_image.getDataInByteArray()));
     return SwingFXUtils.toFXImage(buffered_image, null);
   }
 
   public static Image load_image(Connection conn, int image_id)
-          throws SQLException, NotFoundException, IOException {
-   return convert_ord_image_to_image(get_ord_image(conn, image_id, SQL_SELECT_IMAGE));
-
+      throws SQLException, NotFoundException, IOException {
+    Image img = convert_ord_image_to_image(get_ord_image(conn, image_id, SQL_SELECT_IMAGE));
+    conn.close();
+    return img;
   }
 
   private static OrdImage get_ord_image(Connection conn, int image_id, String sqlSelectImage)
@@ -131,16 +140,21 @@ public class DBImage extends GeneralDB {
       double param2,
       double param3,
       double param4)
-          throws NotFoundException, SQLException, IOException {
-    final boolean previous_auto_commit = conn.getAutoCommit();
-    conn.setAutoCommit(false);
-    try {
-      OrdImage ord_image = select_ord_image_for_update(conn, image_id);
-      execute_processing_of_image(ord_image, op_code, param1, param2, param3, param4);
-      save_ord_image(conn, image_id, ord_image);
-      return convert_ord_image_to_image(ord_image);
-    } finally {
-      conn.setAutoCommit(previous_auto_commit);
+      throws NotFoundException, SQLException, IOException {
+    if (image_id != 0) {
+      final boolean previous_auto_commit = conn.getAutoCommit();
+      conn.setAutoCommit(false);
+      try {
+        OrdImage ord_image = select_ord_image_for_update(conn, image_id);
+        execute_processing_of_image(ord_image, op_code, param1, param2, param3, param4);
+        save_ord_image(conn, image_id, ord_image);
+        return convert_ord_image_to_image(ord_image);
+      } finally {
+        conn.setAutoCommit(previous_auto_commit);
+        conn.close();
+      }
+    } else {
+      return null;
     }
   }
 
@@ -186,27 +200,36 @@ public class DBImage extends GeneralDB {
     }
   }
 
-  public static int find_most_similar_image(
+  public static Image find_most_similar_image(
       Connection conn,
       int image_id,
       double ac_weight,
       double ch_weight,
       double pc_weight,
       double tx_weight)
-      throws SQLException, NotFoundException {
-    try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_SIMILAR_IMAGE)) {
-      prepared_statement.setDouble(1, ac_weight);
-      prepared_statement.setDouble(2, ch_weight);
-      prepared_statement.setDouble(3, pc_weight);
-      prepared_statement.setDouble(4, tx_weight);
-      prepared_statement.setInt(5, image_id);
-      try (ResultSet result_set = prepared_statement.executeQuery()) {
-        if (result_set.next()) {
-          return result_set.getInt(1);
-        } else {
-          throw new NotFoundException();
+      throws SQLException, NotFoundException, IOException {
+    if (image_id != 0) {
+      try (PreparedStatement prepared_statement = conn.prepareStatement(SQL_SELECT_SIMILAR_IMAGE)) {
+        prepared_statement.setDouble(1, ac_weight);
+        prepared_statement.setDouble(2, ch_weight);
+        prepared_statement.setDouble(3, pc_weight);
+        prepared_statement.setDouble(4, tx_weight);
+        prepared_statement.setInt(5, image_id);
+        Image img;
+        try (conn;
+            ResultSet result_set = prepared_statement.executeQuery()) {
+          if (result_set.next()) {
+            image_id = result_set.getInt(1);
+            img = load_image(conn, image_id);
+          } else {
+            throw new NotFoundException();
+          }
         }
+        conn.close();
+        return img;
       }
+    } else {
+      return null;
     }
   }
 }

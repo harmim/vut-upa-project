@@ -27,16 +27,15 @@ public class Collection extends SpatialObject {
     JGeometry new_geometry =
         new JGeometry(geometry.getType(), geometry.getSRID(), elem_info, ord_array);
     update_geometry_of_object(conn, o_id, new_geometry);
+    conn.close();
   }
 
   private static int[] delete_elements_from_elem_info(int[] elem_info, int o_idxs, int o_length) {
     for (int i = 0; i < ELEMENT_INFO_LENGTH; i++) {
       elem_info = ArrayUtils.remove(elem_info, o_idxs * ELEMENT_INFO_LENGTH);
     }
-    int i = o_idxs * ELEMENT_INFO_LENGTH;
-    while (i < elem_info.length) {
+    for (int i = o_idxs * ELEMENT_INFO_LENGTH; i < elem_info.length; i += ELEMENT_INFO_LENGTH) {
       elem_info[i] -= o_length;
-      i += ELEMENT_INFO_LENGTH;
     }
     return elem_info;
   }
@@ -65,12 +64,11 @@ public class Collection extends SpatialObject {
   }
 
   public static double[] add_points_to_collection(Connection conn, int o_id, double[] points)
-          throws Exception {
+      throws Exception {
     JGeometry geometry = select_geometry_for_update(conn, o_id);
     double[] sdo_ord_array = geometry.getOrdinatesArray();
-    for (int i = 0; i < points.length; ) {
+    for (int i = 0; i < points.length; i += POINT_ELEM_SIZE) {
       sdo_ord_array = ArrayUtils.addAll(sdo_ord_array, points[i], points[i + 1]);
-      i += POINT_ELEM_SIZE;
     }
     return sdo_ord_array;
   }
@@ -80,15 +78,13 @@ public class Collection extends SpatialObject {
     JGeometry geometry = select_geometry_for_update(conn, o_id);
     double[] sdo_ord_array = geometry.getOrdinatesArray();
     int[] sdo_elem_info = geometry.getElemInfo();
-    for (int i = 0; i < points.length; ) {
-      for (int j = 0; j < sdo_ord_array.length; ) {
+    for (int i = 0; i < points.length; i += POINT_ELEM_SIZE) {
+      for (int j = 0; j < sdo_ord_array.length; j += POINT_ELEM_SIZE) {
         if (sdo_ord_array[j] == points[i] && sdo_ord_array[j + 1] == points[i + 1]) {
           sdo_ord_array = ArrayUtils.removeAll(sdo_ord_array, j, j + 1);
           break;
         }
-        j += POINT_ELEM_SIZE;
       }
-      i += POINT_ELEM_SIZE;
     }
     return sdo_ord_array;
   }
