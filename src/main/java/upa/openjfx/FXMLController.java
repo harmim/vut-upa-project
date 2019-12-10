@@ -1,16 +1,11 @@
 package upa.openjfx;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Side;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.shape.Rectangle;
-
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 public class FXMLController {
-
 
   @FXML private BorderPane mainPane;
 
@@ -25,7 +20,8 @@ public class FXMLController {
   public void initialize() {
     ConnectController.setParentController(mainPane, ConnectDialog);
     canvasController.setSidePanel(SideController);
-
+    SideController.setConnectionController(ConnectController);
+    SideController.setCanvasController(canvasController);
   }
 
   @FXML
@@ -34,12 +30,12 @@ public class FXMLController {
     ConnectDialog.setVisible(true);
   }
 
-  @FXML
-  public void saveState() {
-    ArrayList<HashMap<Object, Integer>> maps = canvasController.getObjects();
-    HashMap<Object, Integer> newObjects = maps.get(0);
-    HashMap<Object, Integer> editedObjects = maps.get(1);
-    HashMap<Object, Integer> deletedObjects = maps.get(2);
-    SideController.saveStateToDb(newObjects, editedObjects, deletedObjects);
-  }
+  //  @FXML
+  //  public void saveState() {
+  //    ArrayList<HashMap<Object, Integer>> maps = canvasController.getObjects();
+  //    HashMap<Object, Integer> newObjects = maps.get(0);
+  //    HashMap<Object, Integer> editedObjects = maps.get(1);
+  //    HashMap<Object, Integer> deletedObjects = maps.get(2);
+  //    SideController.saveStateToDb(newObjects, editedObjects, deletedObjects);
+  //  }
 }

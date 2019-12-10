@@ -19,7 +19,7 @@ import java.sql.Statement;
 public class InitDB {
 
 
-  public static boolean start(String username, String password) {
+  public static OracleDataSource start(String username, String password) {
     System.out.println("*** STARTING INIT DB ***");
     OracleDataSource ods;
     try {
@@ -46,10 +46,10 @@ public class InitDB {
       }
     } catch (SQLException sqlEx) {
       System.err.println("SQLException: " + sqlEx.getMessage());
-      return false;
+      return null;
     }
     //        saved_images_to_db(ods);
-    return true;
+    return ods;
   }
 
   private static void saved_images_to_db(OracleDataSource ods) {
@@ -76,8 +76,8 @@ public class InitDB {
         DBImage.process_image(conn, 3, "monochrome", 0.0, 0.0, 0.0, 0.0);
 
         // load most similar images from database
-        int sim_image_id = DBImage.find_most_similar_image(conn, 3, 0.3, 0.3, 0.1, 0.3);
-        Image load_image = DBImage.load_image(conn, sim_image_id);
+//        int sim_image_id = DBImage.find_most_similar_image(conn, 3, 0.3, 0.3, 0.1, 0.3);
+//        Image load_image = DBImage.load_image(conn, sim_image_id);
         //        load_image.getDataInFile("./src/load_image.gif");
         System.out.println("*** LOAD SIMILAR IMAGE DONE ***");
 
@@ -116,18 +116,18 @@ public class InitDB {
       Circle.insert_new_circle(conn, "B1", "bushes1", new double[] {10, 10, 5});
 
       CircleCollection.delete_object_from_collection(conn, 5, new int[] {0, 3}, 6);
-      CircleCollection.update_coordinates_of_collection(conn, 5, 100, 130);
+//      CircleCollection.update_coordinates_of_collection(conn, 5, 100, 130);
       CircleCollection.add_circles_to_collection(conn, 5, new int[] {0, 3});
       CircleCollection.update_diameter_of_circles_in_collection(conn, 5, 20);
-      CircleCollection.update_coordinates_of_collection(conn, 5, 50, 150);
+//      CircleCollection.update_coordinates_of_collection(conn, 5, 50, 150);
       CircleCollection.update_diameter_of_circles_in_collection(conn, 5, 5);
-      CircleCollection.update_coordinates_of_collection(conn, 5, 0, 150);
+//      CircleCollection.update_coordinates_of_collection(conn, 5, 0, 150);
 
       CircleCollection.delete_object_from_collection(conn, 6, new int[] {0, 4}, 6);
-      CircleCollection.update_coordinates_of_collection(conn, 6, 30, 55);
+//      CircleCollection.update_coordinates_of_collection(conn, 6, 30, 55);
       CircleCollection.add_circles_to_collection(conn, 6, new int[] {0, 4});
       CircleCollection.update_diameter_of_circles_in_collection(conn, 6, 20);
-      CircleCollection.update_coordinates_of_collection(conn, 6, 200, 50);
+//      CircleCollection.update_coordinates_of_collection(conn, 6, 200, 50);
       // multipoint
       MultiPoint.insert_new_multipoint(
           conn,

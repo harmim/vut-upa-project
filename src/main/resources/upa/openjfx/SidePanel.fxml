@@ -15,7 +15,6 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="640.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="upa.openjfx.SidePanelController">
    <children>
       <BorderPane prefHeight="200.0" prefWidth="200.0">
@@ -24,27 +23,26 @@
               <items>
                   <MenuButton mnemonicParsing="false" text="Multimedia">
                     <items>
-                      <MenuItem mnemonicParsing="false" text="Add image" />
-                      <MenuItem mnemonicParsing="false" text="Delete image" />
+                      <MenuItem mnemonicParsing="false" onAction="#SaveImageToDb" text="Add image" />
+                      <MenuItem mnemonicParsing="false" onAction="#DeleteImageFromDb" text="Delete image" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <Menu mnemonicParsing="false" text="Rotate by">
                           <items>
-                            <MenuItem mnemonicParsing="false" text="90 degrees" />
-                              <MenuItem mnemonicParsing="false" text="180 degrees" />
-                              <MenuItem mnemonicParsing="false" text="270 degrees" />
+                            <MenuItem mnemonicParsing="false" onAction="#RotateImage90" text="90 degrees" />
+                              <MenuItem mnemonicParsing="false" onAction="#RotateImage270" text="270 degrees" />
                           </items>
                         </Menu>
-                        <MenuItem mnemonicParsing="false" text="Mirror" />
-                        <MenuItem mnemonicParsing="false" text="Cut" />
+                        <MenuItem mnemonicParsing="false" onAction="#MirrorImage" text="Mirror" />
+                        <MenuItem mnemonicParsing="false" onAction="#CutImage" text="Cut" />
                         <Menu mnemonicParsing="false" text="Scale">
                           <items>
-                            <MenuItem mnemonicParsing="false" text="Fixed" />
-                              <MenuItem mnemonicParsing="false" text="Max scale" />
-                              <MenuItem mnemonicParsing="false" text="Percentual" />
+                            <MenuItem mnemonicParsing="false" onAction="#fixedScale" text="Fixed" />
+                              <MenuItem mnemonicParsing="false" onAction="#maxScale" text="Max scale" />
+                              <MenuItem mnemonicParsing="false" onAction="#percentualScale" text="Percentual" />
                           </items>
                         </Menu>
-                        <MenuItem mnemonicParsing="false" text="Grayscale" />
-                        <MenuItem mnemonicParsing="false" text="Find most similar" />
+                        <MenuItem mnemonicParsing="false" onAction="#grayScale" text="Grayscale" />
+                        <MenuItem mnemonicParsing="false" onAction="#findMostSimilar" text="Find most similar" />
                     </items>
                   </MenuButton>
                   <MenuButton mnemonicParsing="false" text="Spatial">
@@ -53,7 +51,7 @@
                         <MenuItem mnemonicParsing="false" text="Find N nearest" />
                      </items>
                   </MenuButton>
-                  <Button mnemonicParsing="false" onAction="#ShowImage" text="load" />
+                  <Button mnemonicParsing="false" onAction="#loadInfoFromDb" text="load" />
               </items>
             </ToolBar>
          </top>

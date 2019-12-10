@@ -9,6 +9,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import oracle.jdbc.pool.OracleDataSource;
 import upa.db.InitDB;
 
 import javax.swing.text.html.ImageView;
@@ -27,10 +28,13 @@ public class ConnectingWindowController {
 
   @FXML private Button ConnectButton;
 
+  protected OracleDataSource ods = null;
+
   @FXML
   void ConnectToDB() {
     System.out.println("asdashdklajsdkj");
-    if (InitDB.start(this.username.getText(), this.password.getText())) {
+    ods = InitDB.start(this.username.getText(), this.password.getText());
+    if (ods != null) {
       this.parent1.setVisible(true);
       this.parent2.setVisible(false);
     } else {
