@@ -93,24 +93,6 @@ public class CircleCollection extends Collection {
     return new double[] {x_start, y_start};
   }
 
-//  private static int compute_order_number_of_circle(
-//      ArrayList<Double> sdo_points_arr, double r, int i) {
-//    int old_idx;
-//    if (is_horizontal) {
-//      old_idx =
-//          (int)
-//              ((sdo_points_arr.get(i) - r / 2 - collection_data.get(0))
-//                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
-//    } else {
-//      old_idx =
-//          (int)
-//              ((sdo_points_arr.get(i + 1) - collection_data.get(1))
-//                  / (CIRCLE_SEGMENT_LENGTH * collection_data.get(2)));
-//    }
-//    System.out.println("NO OF CIRCLE:" + old_idx);
-//    return old_idx;
-//  }
-
   public static void compute_coordinates_of_disjoint_circles(
       int n, double x_start, double y_start, double r) {
     int current_offset = 1;

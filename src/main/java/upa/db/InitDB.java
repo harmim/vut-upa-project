@@ -19,7 +19,6 @@ public class InitDB {
 
 
   public static OracleDataSource start(String username, String password) {
-    System.out.println("*** STARTING INIT DB ***");
     OracleDataSource ods;
     try {
       // create a OracleDataSource instance

@@ -32,7 +32,6 @@ public class ConnectingWindowController {
 
   @FXML
   void ConnectToDB() {
-    System.out.println("asdashdklajsdkj");
     ods = InitDB.start(this.username.getText(), this.password.getText());
     if (ods != null) {
       this.parent1.setVisible(true);

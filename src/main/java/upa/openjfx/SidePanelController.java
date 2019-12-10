@@ -58,10 +58,6 @@ public class SidePanelController {
   @FXML private MenuButton spatialMenu;
   @FXML private MenuButton multimediaMenu;
 
-  public OracleDataSource getOds() {
-    return connection.ods;
-  }
-
   public static String getTypeOfObjectFromGroup(Group g) {
     Node n = g.getChildren().get(0);
     if (n instanceof Circle) {
@@ -69,6 +65,10 @@ public class SidePanelController {
         return Mode.workingMode.Multipoint.toString();
       else return Mode.workingMode.Collection.toString();
     } else return Mode.workingMode.Polyline.toString();
+  }
+
+  public OracleDataSource getOds() {
+    return connection.ods;
   }
 
   public void setCanvasController(CanvasController canvas) {
@@ -131,7 +131,6 @@ public class SidePanelController {
           DBImage.save_image_from_file(
               connection.ods.getConnection(), 0, selectedFile.getAbsolutePath());
       objects.put(actualNode, id);
-      System.out.println(canvas.getObjectId(actualNode) + " = " + id);
       SpatialObject.update_image_id_of_object(
           connection.ods.getConnection(), canvas.getObjectId(actualNode), id, true);
     }
@@ -478,7 +477,6 @@ public class SidePanelController {
                         c_o.isSelected() ? 1 : 0,
                         m_o.isSelected() ? 1 : 0,
                         t_o.isSelected() ? 1 : 0);
-                System.out.println(Arrays.toString(results));
                 return results;
               }
             } catch (NumberFormatException e) {
@@ -517,8 +515,6 @@ public class SidePanelController {
                           .boxed()
                           .collect(Collectors.toList());
             } else {
-              System.out.println(Arrays.toString(selected_object_types));
-              System.out.println(Arrays.toString(selected_node_types));
               objects_with_effect =
                   (ArrayList<Integer>)
                       Arrays.stream(
@@ -553,7 +549,6 @@ public class SidePanelController {
               // Applying inner shadow effect to the circle
               node.setEffect(innerShadow);
               node.toFront();
-              System.out.println(node);
             }
           }
         });
@@ -735,7 +730,6 @@ public class SidePanelController {
                           .boxed()
                           .collect(Collectors.toList());
             }
-            System.out.println(objects_with_effect);
           } catch (SQLException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Operation was not successful.");
@@ -758,7 +752,6 @@ public class SidePanelController {
               // Applying inner shadow effect to the circle
               node.setEffect(innerShadow);
               node.toFront();
-              System.out.println(node);
             }
           }
         });
@@ -806,103 +799,100 @@ public class SidePanelController {
           new VBox(
               8,
               subtitle_1,
-              new HBox(4, p_o, s_o, ss_o, c_o, m_o, t_o),
+              new HBox(4, p, s, ss, c, m, t),
               subtitle_2,
-              new HBox(4, p, s, ss, c, m, t)));
+              new HBox(4, p_o, s_o, ss_o, c_o, m_o, t_o)));
     }
 
     dialog.setResultConverter(
-            (ButtonType button) -> {
-              if (button == ButtonType.OK) {
-                refreshAction();
-                int[] results =
-                        new int[] {
-                                p.isSelected() ? 1 : 0,
-                                s.isSelected() ? 1 : 0,
-                                ss.isSelected() ? 1 : 0,
-                                c.isSelected() ? 1 : 0,
-                                m.isSelected() ? 1 : 0,
-                                t.isSelected() ? 1 : 0,
-                        };
-                if (of_node) {
-                  return results;
-                } else {
-                  return ArrayUtils.addAll(
-                          results,
-                          p_o.isSelected() ? 1 : 0,
-                          s_o.isSelected() ? 1 : 0,
-                          ss_o.isSelected() ? 1 : 0,
-                          c_o.isSelected() ? 1 : 0,
-                          m_o.isSelected() ? 1 : 0,
-                          t_o.isSelected() ? 1 : 0);
-                }
-              }
-              return null;
-            });
+        (ButtonType button) -> {
+          if (button == ButtonType.OK) {
+            refreshAction();
+            int[] results =
+                new int[] {
+                  p.isSelected() ? 1 : 0,
+                  s.isSelected() ? 1 : 0,
+                  ss.isSelected() ? 1 : 0,
+                  c.isSelected() ? 1 : 0,
+                  m.isSelected() ? 1 : 0,
+                  t.isSelected() ? 1 : 0,
+                };
+            if (of_node) {
+              return results;
+            } else {
+              return ArrayUtils.addAll(
+                  results,
+                  p_o.isSelected() ? 1 : 0,
+                  s_o.isSelected() ? 1 : 0,
+                  ss_o.isSelected() ? 1 : 0,
+                  c_o.isSelected() ? 1 : 0,
+                  m_o.isSelected() ? 1 : 0,
+                  t_o.isSelected() ? 1 : 0);
+            }
+          }
+          return null;
+        });
 
     Optional<int[]> optionalResult = dialog.showAndWait();
     optionalResult.ifPresent(
-            (int[] results) -> {
-              String[] selected_node_types;
-              selected_node_types =
-                      get_types_of_selected_nodes(0, node_types.length, results, node_types);
+        (int[] results) -> {
+          String[] selected_node_types;
+          selected_node_types =
+              get_types_of_selected_nodes(0, node_types.length, results, node_types);
 
-              String[] selected_object_types = new String[0];
-              if (!of_node) {
-                selected_object_types =
-                        get_types_of_selected_nodes(
-                                node_types.length, 2 * node_types.length, results, node_types);
-              }
-              try {
-                if (of_node) {
-                  objects_with_effect =
-                          (ArrayList<Integer>)
-                                  Arrays.stream(
-                                          SpatialOperators.get_interacted_objects_with_object_by_id(
-                                                  connection.ods.getConnection(),
-                                                  canvas.getObjectId(actualNode),
-                                                  selected_node_types))
-                                          .boxed()
-                                          .collect(Collectors.toList());
-                } else {
-                  System.out.println(Arrays.toString(selected_object_types));
-                  System.out.println(Arrays.toString(selected_node_types));
-                  objects_with_effect =
-                          (ArrayList<Integer>)
-                                  Arrays.stream(
-                                          SpatialOperators.get_interacted_objects_with_object_by_type(
-                                                  connection.ods.getConnection(),
-                                                  selected_object_types,
-                                                  selected_node_types))
-                                          .boxed()
-                                          .collect(Collectors.toList());
-                }
-              } catch (SQLException e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Operation was not successful.");
-                alert.setHeaderText("The finding of interacted objects was not successful!");
-                alert.setContentText("Try again!");
-                alert.showAndWait();
-              }
-              for (int id : objects_with_effect) {
-                Node node = canvas.getObjectById(id);
-                if (node != null) {
-                  InnerShadow innerShadow = new InnerShadow();
+          String[] selected_object_types = new String[0];
+          if (!of_node) {
+            selected_object_types =
+                get_types_of_selected_nodes(
+                    node_types.length, 2 * node_types.length, results, node_types);
+          }
+          try {
+            if (of_node) {
+              objects_with_effect =
+                  (ArrayList<Integer>)
+                      Arrays.stream(
+                              SpatialOperators.get_interacted_objects_with_object_by_id(
+                                  connection.ods.getConnection(),
+                                  canvas.getObjectId(actualNode),
+                                  selected_node_types))
+                          .boxed()
+                          .collect(Collectors.toList());
+            } else {
+              objects_with_effect =
+                  (ArrayList<Integer>)
+                      Arrays.stream(
+                              SpatialOperators.get_interacted_objects_with_object_by_type(
+                                  connection.ods.getConnection(),
+                                  selected_object_types,
+                                  selected_node_types))
+                          .boxed()
+                          .collect(Collectors.toList());
+            }
+          } catch (SQLException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Operation was not successful.");
+            alert.setHeaderText("The finding of interacted objects was not successful!");
+            alert.setContentText("Try again!");
+            alert.showAndWait();
+          }
+          for (int id : objects_with_effect) {
+            Node node = canvas.getObjectById(id);
+            if (node != null) {
+              InnerShadow innerShadow = new InnerShadow();
 
-                  // Setting the offset values of the inner shadow
-                  innerShadow.setOffsetX(800);
-                  innerShadow.setOffsetY(600);
+              // Setting the offset values of the inner shadow
+              innerShadow.setOffsetX(800);
+              innerShadow.setOffsetY(600);
 
-                  // Setting the color of the inner shadow
-                  innerShadow.setColor(Color.LIGHTBLUE);
+              // Setting the color of the inner shadow
+              innerShadow.setColor(Color.LIGHTBLUE);
 
-                  // Applying inner shadow effect to the circle
-                  node.setEffect(innerShadow);
-                  node.toFront();
-                  System.out.println(node);
-                }
-              }
-            });
+              // Applying inner shadow effect to the circle
+              node.setEffect(innerShadow);
+              node.toFront();
+            }
+          }
+        });
   }
 
   @FXML
@@ -917,7 +907,6 @@ public class SidePanelController {
 
   public void setActiveNode(Node obj, Integer id)
       throws SQLException, IOException, GeneralDB.NotFoundException {
-    System.out.println(actualNode);
     actualNode = obj;
     if (objects.containsKey(actualNode)) {
       try {
@@ -959,10 +948,8 @@ public class SidePanelController {
       throws Exception {
     // save new objects to DB and set their dbIDs
     for (HashMap.Entry<Node, Integer> entry : newObjects.entrySet()) {
-      System.out.println("New OBJ " + entry.getKey());
       String typeOfObject = getTypeOfObject(entry.getKey());
       int id;
-      System.out.println("--------" + typeOfObject);
       int index = 0;
       double points[];
       switch (typeOfObject) {
@@ -1055,8 +1042,6 @@ public class SidePanelController {
     }
 
     for (HashMap.Entry<Node, Integer> entry : editedObjects.entrySet()) {
-      System.out.println(mode);
-      System.out.println("Edited OBJ " + entry);
       String typeOfObject = getTypeOfObject(entry.getKey());
       double[] points;
       int index = 0;
@@ -1125,7 +1110,6 @@ public class SidePanelController {
             if (((Circle) cc.getChildren().get(i)).isVisible()) active_circles[j++] = i;
           }
           if (mode.equals("Move")) {
-            System.out.println("Move Circle Collection");
             CircleCollection.update_coordinates_of_collection(
                 connection.ods.getConnection(),
                 entry.getValue(),
@@ -1133,7 +1117,6 @@ public class SidePanelController {
                 translateYCordForDb(firstCircle.getCenterY() + firstCircle.getRadius()),
                 active_circles);
           } else {
-            System.out.println("Resize Circle Collection");
             CircleCollection.update_diameter_of_circles_in_collection(
                 connection.ods.getConnection(), entry.getValue(), firstCircle.getRadius() * 2);
           }
@@ -1141,7 +1124,6 @@ public class SidePanelController {
     }
 
     for (HashMap.Entry<Node, Integer> entry : deletedObjects.entrySet()) {
-      System.out.println("Removed OBJ " + entry);
       String typeOfObject = getTypeOfObject(entry.getKey());
       if (typeOfObject.equals(Mode.workingMode.Collection.toString())) {
         CircleCollection.delete_circle_collection(connection.ods.getConnection(), entry.getValue());
@@ -1154,22 +1136,17 @@ public class SidePanelController {
   // only for changes on existing special objects (Collection, PL, MP) in DB, contextMenu changes
   public void saveObjectToDb(String typeOfObject, int id, String mode, Vector<Double> changes)
       throws Exception {
-    System.out.println("DB obtains object " + typeOfObject + "changed in mode " + mode);
-    //    System.out.println(typeOfObject);
-    //    System.out.println(object);
     switch (typeOfObject) {
       case "Multipoint":
         if (mode.equals(Mode.transactionMode.removePointFromMP.toString())) {
           MultiPoint.delete_points_from_multipoint(
               connection.ods.getConnection(), id, pointsDataToArrayWithTranslate(changes));
         } else {
-          System.out.println("ID: " + id);
           MultiPoint.add_points_to_multipoint(
               connection.ods.getConnection(), id, pointsDataToArrayWithTranslate(changes));
         }
         break;
       case "Polyline":
-        System.out.println(changes);
         if (mode.equals(Mode.transactionMode.removePointFromPL.toString())) {
           StraightLineString.delete_points_from_line_string(
               connection.ods.getConnection(), id, pointsDataToArrayWithTranslate(changes));
@@ -1192,7 +1169,6 @@ public class SidePanelController {
   private String getTypeOfObject(Node n) {
     if (n instanceof Rectangle) return Mode.workingMode.Rect.toString();
     if (n instanceof Circle) {
-      System.out.println("IT IS CIRCLE");
       if (((Circle) n).getRadius() == CanvasController.pointRadius)
         return Mode.workingMode.Point.toString();
       else return Mode.workingMode.Circle.toString();

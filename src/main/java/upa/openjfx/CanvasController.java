@@ -58,7 +58,6 @@ public class CanvasController {
   }
 
   private void flush_temporal_data() {
-    //    System.out.println("FLUSHING ...");
     if (!this.mode.equals(Mode.workingMode.Polyline.toString())
         && !this.mode.equals(Mode.workingMode.addPointToPL.toString())) {
       polylinePoints = new Vector<Double>();
@@ -268,7 +267,6 @@ public class CanvasController {
 
           Rectangle c = (Rectangle) (t.getSource());
           c.toFront();
-          //          System.out.println(c);
           selectObject(c);
           if (this.mode.equals(Mode.workingMode.None.toString())) {
             try {
@@ -277,7 +275,6 @@ public class CanvasController {
               e.printStackTrace();
             }
           }
-          System.out.println(c);
         });
     rect.setOnMouseDragged(
         (t) -> {
@@ -358,7 +355,6 @@ public class CanvasController {
               e.printStackTrace();
             }
           }
-          System.out.println(c);
         });
     circle.setOnMouseDragged(
         (t) -> {
@@ -425,7 +421,6 @@ public class CanvasController {
             circle.setVisible(false);
 
             for (Node n : group.getChildren()) {
-              //              System.out.println(n);
               if (n.isVisible()) {
                 empty = false;
                 try {
@@ -490,7 +485,6 @@ public class CanvasController {
                 add.getItems().add(item);
               }
             } else {
-              //              System.out.println("Invisible = 0");
               if (contextMenu.getItems().size() > 1) contextMenu.getItems().remove(1);
             }
             if (mode.equals(Mode.workingMode.Collection.toString()))
@@ -519,7 +513,6 @@ public class CanvasController {
               e.printStackTrace();
             }
           }
-          for (Node n : group.getChildren()) System.out.println(n);
         });
     group.setOnMouseDragged(
         (t) -> {
@@ -605,7 +598,6 @@ public class CanvasController {
               e.printStackTrace();
             }
           }
-          for (Node n : group.getChildren()) System.out.println(n);
         });
     group.setOnMouseDragged(
         (t) -> {
@@ -671,7 +663,6 @@ public class CanvasController {
             //              currentlyEditedSpecialSpatialObject = null;
             return;
           }
-          System.out.println("Nemazem celu grupu ale iba prvok");
           //            if (objects.containsKey(group)) editedObjects.put(group,
           // objects.get(group));
           try {
@@ -757,7 +748,6 @@ public class CanvasController {
               e.printStackTrace();
             }
           }
-          for (Node n : group.getChildren()) System.out.println(n);
         });
     group.setOnMouseDragged(
         (t) -> {
@@ -851,12 +841,10 @@ public class CanvasController {
               multipointPoints.add(((Circle) n).getCenterY());
             }
           }
-          //            System.out.println(multipointPoints);
         });
 
     c.setOnContextMenuRequested(
         event -> {
-          System.out.println("HELLO");
           if (mode.equals(Mode.workingMode.Multipoint.toString())
               || mode.equals(Mode.workingMode.addPointToMP.toString()))
             contextMenu.show(c, event.getScreenX(), event.getScreenY());
@@ -869,15 +857,12 @@ public class CanvasController {
     if (transactionMode.equals(newMode) && object == currentlyEditedSpecialSpatialObject) return;
     saveState();
     if (currentlyEditedSpecialSpatialObject != null) {
-      //      System.out.println("OKAY");
 
       // saving global changes to the DB
       saveChange(); // saving local changes to the DB
     }
     transactionMode = newMode;
     currentlyEditedSpecialSpatialObject = object;
-    //    System.out.println(currentlyEditedSpecialSpatialObject);
-    //    System.out.println(transactionMode = newMode);
   }
 
   private void saveChange() throws Exception {
@@ -898,18 +883,6 @@ public class CanvasController {
       objectType = Mode.workingMode.Multipoint.toString();
       changes = currentlyEditedDataMPData;
     }
-    //    for (Node n : currentlyEditedSpecialSpatialObject.getChildren()) {
-    //      System.out.println((n));
-    //    }
-    //    System.out.println("----------------------------");
-    //    for (Node o : objects.keySet()) {
-    //      for (Node n : ((Group) o).getChildren()) System.out.println((n));
-    //    }
-    //    System.out.println(currentlyEditedSpecialSpatialObject);
-    //    System.out.println(objects.containsKey(currentlyEditedSpecialSpatialObject));
-    //    if (!objects.containsKey(currentlyEditedSpecialSpatialObject)) {
-    //      System.out.println("A");
-    //    }
     sidePanel.saveObjectToDb(
         objectType, objects.get(currentlyEditedSpecialSpatialObject), transactionMode, changes);
     currentlyEditedDataCollectionData = new Vector<>();
