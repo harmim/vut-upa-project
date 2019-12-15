@@ -1,16 +1,17 @@
 package upa.openjfx;
 
 import javafx.fxml.FXML;
-import javafx.geometry.Side;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
-import javax.sql.ConnectionPoolDataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.io.IOException;
 
 public class FXMLController {
-
   @FXML private BorderPane mainPane;
 
   @FXML private ConnectingWindowController ConnectController;
@@ -34,12 +35,15 @@ public class FXMLController {
     ConnectDialog.setVisible(true);
   }
 
-  //  @FXML
-  //  public void saveState() {
-  //    ArrayList<HashMap<Object, Integer>> maps = canvasController.getObjects();
-  //    HashMap<Object, Integer> newObjects = maps.get(0);
-  //    HashMap<Object, Integer> editedObjects = maps.get(1);
-  //    HashMap<Object, Integer> deletedObjects = maps.get(2);
-  //    SideController.saveStateToDb(newObjects, editedObjects, deletedObjects);
-  //  }
+  @FXML
+  public void AboutActionClicked() throws IOException {
+    Stage stage = new Stage();
+    Parent root = FXMLLoader.load(
+      FXMLController.class.getResource("About.fxml")
+    );
+    stage.setScene(new Scene(root));
+    stage.setTitle("About");
+    stage.initModality(Modality.WINDOW_MODAL);
+    stage.show();
+  }
 }
