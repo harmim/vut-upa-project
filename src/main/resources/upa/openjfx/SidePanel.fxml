@@ -73,7 +73,6 @@
                         </Menu>
                      </items>
                   </MenuButton>
-                  <Button mnemonicParsing="false" onAction="#refreshAction" text="Refresh" />
               </items>
             </ToolBar>
          </top>

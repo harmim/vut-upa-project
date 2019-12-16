@@ -14,6 +14,7 @@ run {
 
 dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0.1'
+    compile group: 'org.mybatis', name: 'mybatis', version: '3.5.3'
 
     // Oracle JDBC for Java 8
     compile group: 'com.oracle.weblogic', name: 'ojdbc8', version: '18.3.0.0.0'
@@ -28,6 +29,7 @@ dependencies {
 repositories {
     jcenter()
     maven { url "https://rychly-edu.gitlab.io/dbs/mvn-repo" }
+    maven { url "https://mvnrepository.com/artifact/org.mybatis/mybatis" }
 }
 
 javafx {

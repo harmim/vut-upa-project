@@ -8,7 +8,6 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
-import javafx.scene.effect.ColorInput;
 import javafx.scene.effect.InnerShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -19,7 +18,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import oracle.jdbc.pool.OracleDataSource;
 import org.apache.commons.lang3.ArrayUtils;
 import upa.db.GeneralDB;
 import upa.db.multimedia.DBImage;
@@ -27,23 +25,17 @@ import upa.db.queries.Mask;
 import upa.db.queries.SpatialOperators;
 import upa.db.spatial.*;
 import upa.db.spatial.Point;
-
-import javax.print.DocFlavor;
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.File;
 import java.io.IOException;
-
 import java.sql.SQLException;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SidePanelController {
-
+  private static final Color COLOR_SELECTED_SHADOW = Color.GOLD;
   private ConnectingWindowController connection;
   private CanvasController canvas;
   private Node actualNode;
-  private Vector<Integer> images_id;
   private HashMap<Node, Integer> objects;
   private ArrayList<Integer> objects_with_effect;
   private String[] node_types =
@@ -67,16 +59,12 @@ public class SidePanelController {
     } else return Mode.workingMode.Polyline.toString();
   }
 
-  public OracleDataSource getOds() {
-    return connection.ods;
-  }
-
   public void setCanvasController(CanvasController canvas) {
     this.canvas = canvas;
   }
 
+  @FXML
   public void initialize() {
-    images_id = new Vector<>();
     objects = new HashMap<>();
     objects_with_effect = new ArrayList<>();
   }
@@ -94,6 +82,10 @@ public class SidePanelController {
       }
     }
     objects_with_effect.clear();
+  }
+
+  public void addObject(Node node, int imageId) {
+    objects.put(node, imageId);
   }
 
   @FXML
@@ -201,7 +193,6 @@ public class SidePanelController {
 
   @FXML
   public void CutImage() {
-
     Dialog<String[]> dialog = new Dialog<>();
     dialog.setTitle("Cut Image");
     dialog.setHeaderText("Please specify coordinates, width and height.");
@@ -543,8 +534,7 @@ public class SidePanelController {
               innerShadow.setOffsetX(800);
               innerShadow.setOffsetY(600);
 
-              // Setting the color of the inner shadow
-              innerShadow.setColor(Color.LIGHTBLUE);
+              innerShadow.setColor(COLOR_SELECTED_SHADOW);
 
               // Applying inner shadow effect to the circle
               node.setEffect(innerShadow);
@@ -746,8 +736,7 @@ public class SidePanelController {
               innerShadow.setOffsetX(800);
               innerShadow.setOffsetY(600);
 
-              // Setting the color of the inner shadow
-              innerShadow.setColor(Color.LIGHTBLUE);
+              innerShadow.setColor(COLOR_SELECTED_SHADOW);
 
               // Applying inner shadow effect to the circle
               node.setEffect(innerShadow);
@@ -884,8 +873,7 @@ public class SidePanelController {
               innerShadow.setOffsetX(800);
               innerShadow.setOffsetY(600);
 
-              // Setting the color of the inner shadow
-              innerShadow.setColor(Color.LIGHTBLUE);
+              innerShadow.setColor(COLOR_SELECTED_SHADOW);
 
               // Applying inner shadow effect to the circle
               node.setEffect(innerShadow);
@@ -905,39 +893,44 @@ public class SidePanelController {
     findInteractObject(true);
   }
 
-  public void setActiveNode(Node obj, Integer id)
-      throws SQLException, IOException, GeneralDB.NotFoundException {
+  public void setActiveNode(Node obj) throws SQLException, IOException, GeneralDB.NotFoundException {
     actualNode = obj;
     if (objects.containsKey(actualNode)) {
       try {
         image.setImage(
-            DBImage.load_image(
-                connection.ods.getConnection(), objects.getOrDefault(actualNode, 0)));
+            DBImage.load_image(connection.ods.getConnection(), objects.getOrDefault(actualNode, 0)));
       } catch (GeneralDB.NotFoundException e) {
         image.setImage(null);
       }
     } else {
       image.setImage(null);
     }
-    String[] name_and_type =
-        SpatialObject.select_name_and_type_of_object(
-            connection.ods.getConnection(), canvas.getObjectId(actualNode));
-    double area =
-        SpatialOperators.get_area_of_object_by_id(
-            connection.ods.getConnection(), canvas.getObjectId(actualNode));
-    double diameter =
-        SpatialOperators.get_diameter_of_object_by_id(
-            connection.ods.getConnection(), canvas.getObjectId(actualNode));
-    double length =
-        SpatialOperators.get_length_of_object_by_id(
-            connection.ods.getConnection(), canvas.getObjectId(actualNode));
-    nameOfObject.setText(name_and_type[0]);
-    typeOfObject.setText(name_and_type[1]);
-    areaOfObject.setText(Double.toString(area));
-    diameterOfObject.setText(Double.toString(diameter));
-    lengthOfObject.setText(Double.toString(length));
-    //    loadInfoFr
-    //    omDb(obj, );
+
+    if (actualNode != null) {
+      String[] name_and_type =
+          SpatialObject.select_name_and_type_of_object(
+              connection.ods.getConnection(), canvas.getObjectId(actualNode));
+      double area =
+          SpatialOperators.get_area_of_object_by_id(
+              connection.ods.getConnection(), canvas.getObjectId(actualNode));
+      double diameter =
+          SpatialOperators.get_diameter_of_object_by_id(
+              connection.ods.getConnection(), canvas.getObjectId(actualNode));
+      double length =
+          SpatialOperators.get_length_of_object_by_id(
+              connection.ods.getConnection(), canvas.getObjectId(actualNode));
+      nameOfObject.setText(name_and_type[0]);
+      typeOfObject.setText(name_and_type[1]);
+      areaOfObject.setText(Double.toString(area));
+      diameterOfObject.setText(Double.toString(diameter));
+      lengthOfObject.setText(Double.toString(length));
+    } else {
+      nameOfObject.setText("");
+      typeOfObject.setText("");
+      areaOfObject.setText("");
+      diameterOfObject.setText("");
+      lengthOfObject.setText("");
+    }
   }
 
   public void saveStateToDb(
@@ -950,8 +943,8 @@ public class SidePanelController {
     for (HashMap.Entry<Node, Integer> entry : newObjects.entrySet()) {
       String typeOfObject = getTypeOfObject(entry.getKey());
       int id;
-      int index = 0;
-      double points[];
+      int index;
+      double[] points;
       switch (typeOfObject) {
         case "Rect":
           Rectangle r = ((Rectangle) (entry.getKey()));
@@ -962,9 +955,9 @@ public class SidePanelController {
                   "spaceships",
                   new double[] {
                     r.getX(),
-                    translateYCordForDb(r.getY()),
+                    SpatialObject.translateYCordForDb(r.getY()),
                     r.getX() + r.getWidth(),
-                    translateYCordForDb(r.getY() + r.getHeight())
+                    SpatialObject.translateYCordForDb(r.getY() + r.getHeight())
                   });
           entry.setValue(id);
           break;
@@ -977,7 +970,7 @@ public class SidePanelController {
                   "planets",
                   new double[] {
                     c.getCenterX() - c.getRadius(),
-                    translateYCordForDb(c.getCenterY() + c.getRadius()),
+                    SpatialObject.translateYCordForDb(c.getCenterY() + c.getRadius()),
                     c.getRadius() * 2
                   });
           entry.setValue(id);
@@ -989,7 +982,7 @@ public class SidePanelController {
                   connection.ods.getConnection(),
                   "HviezdaA",
                   "stars",
-                  new double[] {p.getCenterX(), translateYCordForDb(p.getCenterY())});
+                  new double[] {p.getCenterX(), SpatialObject.translateYCordForDb(p.getCenterY())});
           entry.setValue(id);
           break;
         case "Multipoint":
@@ -998,7 +991,7 @@ public class SidePanelController {
           index = 0;
           for (Node n : m.getChildren()) {
             points[index++] = ((Circle) n).getCenterX();
-            points[index++] = translateYCordForDb(((Circle) n).getCenterY());
+            points[index++] = SpatialObject.translateYCordForDb(((Circle) n).getCenterY());
           }
           id =
               upa.db.spatial.MultiPoint.insert_new_multipoint(
@@ -1012,7 +1005,7 @@ public class SidePanelController {
           for (Node n : pl.getChildren()) {
             if (n instanceof Circle) {
               points[index++] = ((Circle) n).getCenterX();
-              points[index++] = translateYCordForDb(((Circle) n).getCenterY());
+              points[index++] = SpatialObject.translateYCordForDb(((Circle) n).getCenterY());
             }
           }
           id =
@@ -1031,7 +1024,7 @@ public class SidePanelController {
                   "meteorites",
                   new double[] {
                     firstCircle.getCenterX() - firstCircle.getRadius(),
-                    translateYCordForDb(firstCircle.getCenterY() + firstCircle.getRadius()),
+                    SpatialObject.translateYCordForDb(firstCircle.getCenterY() + firstCircle.getRadius()),
                     firstCircle.getRadius() * 2
                   },
                   n,
@@ -1044,7 +1037,7 @@ public class SidePanelController {
     for (HashMap.Entry<Node, Integer> entry : editedObjects.entrySet()) {
       String typeOfObject = getTypeOfObject(entry.getKey());
       double[] points;
-      int index = 0;
+      int index;
       switch (typeOfObject) {
         case "Point":
           // only MOVE
@@ -1052,7 +1045,7 @@ public class SidePanelController {
           Point.update_geometry_of_point(
               connection.ods.getConnection(),
               entry.getValue(),
-              new double[] {p.getCenterX(), translateYCordForDb(p.getCenterY())});
+              new double[] {p.getCenterX(), SpatialObject.translateYCordForDb(p.getCenterY())});
           break;
         case "Circle":
           Circle c = ((Circle) (entry.getKey()));
@@ -1061,7 +1054,7 @@ public class SidePanelController {
               entry.getValue(),
               new double[] {
                 c.getCenterX() - c.getRadius(),
-                translateYCordForDb(c.getCenterY() + c.getRadius()),
+                SpatialObject.translateYCordForDb(c.getCenterY() + c.getRadius()),
                 c.getRadius() * 2
               });
           break;
@@ -1072,9 +1065,9 @@ public class SidePanelController {
               entry.getValue(),
               new double[] {
                 r.getX(),
-                translateYCordForDb(r.getY()),
+                SpatialObject.translateYCordForDb(r.getY()),
                 r.getX() + r.getWidth(),
-                translateYCordForDb(r.getY() + r.getHeight())
+                SpatialObject.translateYCordForDb(r.getY() + r.getHeight())
               });
           break;
         case "Multipoint":
@@ -1083,7 +1076,7 @@ public class SidePanelController {
           index = 0;
           for (Node n : m.getChildren()) {
             points[index++] = ((Circle) n).getCenterX();
-            points[index++] = translateYCordForDb(((Circle) n).getCenterY());
+            points[index++] = SpatialObject.translateYCordForDb(((Circle) n).getCenterY());
           }
           upa.db.spatial.MultiPoint.update_geometry_of_multipoint(
               connection.ods.getConnection(), entry.getValue(), points);
@@ -1095,7 +1088,7 @@ public class SidePanelController {
           for (Node n : pl.getChildren()) {
             if (n instanceof Circle) {
               points[index++] = ((Circle) n).getCenterX();
-              points[index++] = translateYCordForDb(((Circle) n).getCenterY());
+              points[index++] = SpatialObject.translateYCordForDb(((Circle) n).getCenterY());
             }
           }
           upa.db.spatial.StraightLineString.update_geometry_of_line_string(
@@ -1114,7 +1107,7 @@ public class SidePanelController {
                 connection.ods.getConnection(),
                 entry.getValue(),
                 firstCircle.getCenterX() - firstCircle.getRadius(),
-                translateYCordForDb(firstCircle.getCenterY() + firstCircle.getRadius()),
+                SpatialObject.translateYCordForDb(firstCircle.getCenterY() + firstCircle.getRadius()),
                 active_circles);
           } else {
             CircleCollection.update_diameter_of_circles_in_collection(
@@ -1175,10 +1168,6 @@ public class SidePanelController {
     } else return getTypeOfObjectFromGroup((Group) (n));
   }
 
-  private double translateYCordForDb(double y) {
-    return 600.0 - y;
-  }
-
   private int[] doubleArrayToIntArray(Vector arr) {
     int[] target = new int[arr.size()];
     for (int i = 0; i < target.length; i++) {
@@ -1191,7 +1180,7 @@ public class SidePanelController {
     double[] target = new double[points.size()];
     for (int i = 0; i < target.length; i++) {
       target[i] =
-          (i % 2 == 1) ? translateYCordForDb((double) points.get(i)) : (double) points.get(i);
+          (i % 2 == 1) ? SpatialObject.translateYCordForDb((double) points.get(i)) : (double) points.get(i);
     }
     return target;
   }

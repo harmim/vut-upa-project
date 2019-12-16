@@ -1,22 +1,14 @@
 package upa.openjfx;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.ImageCursor;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import oracle.jdbc.pool.OracleDataSource;
 import upa.db.InitDB;
 
-import javax.swing.text.html.ImageView;
-import java.sql.SQLException;
-
 public class ConnectingWindowController {
-
   private BorderPane parent1;
   private AnchorPane parent2;
 
@@ -24,16 +16,31 @@ public class ConnectingWindowController {
 
   @FXML private TextField password;
 
-  @FXML private AnchorPane ConnectDialog;
+  private CanvasController canvasController;
 
-  @FXML private Button ConnectButton;
+  private FXMLController fxmlController;
 
   protected OracleDataSource ods = null;
+
+  public void setCanvasController(CanvasController c) {
+    canvasController = c;
+  }
+
+  public void setFXMLController(FXMLController c) {
+    fxmlController = c;
+  }
 
   @FXML
   void ConnectToDB() {
     ods = InitDB.start(this.username.getText(), this.password.getText());
     if (ods != null) {
+      if (!InitDB.schemaExists(ods)) {
+        InitDB.initSchema(ods);
+      }
+      canvasController.fillCanvasFromDb();
+
+      fxmlController.labelUsername.setText(InitDB.getCurrentUser(ods));
+
       this.parent1.setVisible(true);
       this.parent2.setVisible(false);
     } else {

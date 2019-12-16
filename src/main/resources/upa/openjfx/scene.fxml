@@ -1,58 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0"
-            prefWidth="1200.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="upa.openjfx.FXMLController">
-    <BorderPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-                minWidth="-Infinity" prefHeight="690.0" prefWidth="1200.0" visible="false">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="upa.openjfx.FXMLController">
+    <BorderPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0" prefWidth="1200.0" visible="false">
         <top>
-            <MenuBar maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                     prefHeight="30.0" prefWidth="1200.0">
+            <MenuBar maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="1200.0">
                 <Menu mnemonicParsing="false" text="Action">
-                    <MenuItem mnemonicParsing="false" onAction="#LogoutActionClicked" text="Logout"/>
-                    <MenuItem mnemonicParsing="false" onAction="#AboutActionClicked" text="About"/>
+                    <MenuItem mnemonicParsing="false" onAction="#LogoutActionClicked" text="Logout" />
+                    <MenuItem mnemonicParsing="false" onAction="#AboutActionClicked" text="About" />
                 </Menu>
             </MenuBar>
         </top>
         <bottom>
-            <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                  prefHeight="20.0" prefWidth="1200.0" spacing="10.0" BorderPane.alignment="CENTER">
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label text="Connected"/>
-                <Label alignment="CENTER" layoutX="10.0" layoutY="10.0" text="User:"/>
+            <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="1200.0" spacing="10.0" BorderPane.alignment="CENTER">
+                <Region HBox.hgrow="ALWAYS" />
+                <Label id="label-connected" text="Connected" />
+                <Label text="User:" />
+                <Label fx:id="labelUsername">
+                    <HBox.margin>
+                        <Insets right="5.0" />
+                    </HBox.margin>
+                    <padding>
+                        <Insets left="-5.0" />
+                    </padding>
+                </Label>
             </HBox>
         </bottom>
         <center>
-            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                        prefHeight="640.0" prefWidth="800.0" BorderPane.alignment="TOP_LEFT">
-                <fx:include fx:id="canvas" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-                            minWidth="-Infinity" prefHeight="640.0" prefWidth="800.0" source="Canvas.fxml"/>
-                <Separator layoutX="800.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-                           minWidth="-Infinity" orientation="VERTICAL" prefHeight="640.0" prefWidth="10.0"
-                           valignment="TOP"/>
-                <Separator layoutY="639.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-                           minWidth="-Infinity" prefHeight="3.0" prefWidth="1200.0"/>
+            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="640.0" prefWidth="800.0" BorderPane.alignment="TOP_LEFT">
+                <fx:include fx:id="canvas" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="640.0" prefWidth="800.0" source="Canvas.fxml" />
+                <Separator layoutX="800.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="640.0" prefWidth="10.0" valignment="TOP" />
+                <Separator layoutY="639.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="3.0" prefWidth="1200.0" />
             </AnchorPane>
         </center>
         <right>
-            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                        prefHeight="640.0" prefWidth="400.0" BorderPane.alignment="CENTER">
-                <fx:include fx:id="Side" source="SidePanel.fxml"/>
+            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="640.0" prefWidth="400.0" BorderPane.alignment="CENTER">
+                <fx:include fx:id="Side" source="SidePanel.fxml" />
             </AnchorPane>
         </right>
     </BorderPane>
-    <AnchorPane fx:id="ConnectDialog" layoutX="300.0" layoutY="250.0" maxHeight="-Infinity" maxWidth="-Infinity"
-                minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="600.0">
-        <fx:include fx:id="Connect" source="ConnectingWindow.fxml"/>
+    <AnchorPane fx:id="ConnectDialog" layoutX="300.0" layoutY="250.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="600.0">
+        <fx:include fx:id="Connect" source="ConnectingWindow.fxml" />
     </AnchorPane>
 </AnchorPane>

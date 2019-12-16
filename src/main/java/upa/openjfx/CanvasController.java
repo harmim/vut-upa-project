@@ -1,13 +1,11 @@
 package upa.openjfx;
 
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -15,21 +13,33 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
+import oracle.jdbc.OracleResultSet;
+import oracle.spatial.geometry.JGeometry;
 import upa.db.GeneralDB;
+import upa.db.InitDB;
+import upa.db.spatial.SpatialObject;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Vector;
+import java.sql.Struct;
+import java.util.*;
+
 
 public class CanvasController {
-  public static int pointRadius = 4;
-  private static int prefSize = 20;
-  private static int groupCount = 4;
-  private static Color prefColor = Color.GOLD;
+  public static final int pointRadius = 4;
+  private static final int prefSize = 20;
+  private static final int groupCount = 4;
+  private static final Color COLOR_SPACESHIP = Color.LIGHTGRAY;
+  private static final Color COLOR_PLANET = Color.SKYBLUE;
+  private static final Color COLOR_STAR = Color.YELLOW;
+  private static final Color COLOR_CONSTELLATION = Color.DARKGOLDENROD;
+  private static final Color COLOR_METEORIT = Color.INDIANRED;
+  private static final Color COLOR_SATELLITE = Color.SEAGREEN;
+  private static final Color COLOR_SATELLITE_EDGE = Color.WHITESMOKE;
   private double xCord, yCord;
-  private String mode = Mode.workingMode.Move.toString();
+  private String mode = Mode.workingMode.None.toString();
   private String transactionMode = Mode.transactionMode.None.toString();
   private Vector<Double> polylinePoints;
   private Vector<Double> multipointPoints;
@@ -49,69 +59,69 @@ public class CanvasController {
   @FXML private AnchorPane Canvas;
   @FXML private ToggleGroup ToggleGroup1;
 
-  private static double[] pointsDataToArray(Vector points) {
+  private ConnectingWindowController connection;
+
+  public void setConnectionController(ConnectingWindowController c) {
+    connection = c;
+  }
+
+  private static double[] pointsDataToArray(Vector<Double> points) {
     double[] target = new double[points.size()];
     for (int i = 0; i < target.length; i++) {
-      target[i] = (double) points.get(i);
+      target[i] = points.get(i);
     }
     return target;
   }
 
   private void flush_temporal_data() {
-    if (!this.mode.equals(Mode.workingMode.Polyline.toString())
-        && !this.mode.equals(Mode.workingMode.addPointToPL.toString())) {
-      polylinePoints = new Vector<Double>();
+    if (!mode.equals(Mode.workingMode.Polyline.toString())
+        && !mode.equals(Mode.workingMode.addPointToPL.toString())) {
+      polylinePoints = new Vector<>();
       oldPolyline = null;
     }
-    if (!this.mode.equals(Mode.workingMode.Multipoint.toString())
-        && !this.mode.equals(Mode.workingMode.addPointToMP.toString())) {
-      multipointPoints = new Vector<Double>();
+    if (!mode.equals(Mode.workingMode.Multipoint.toString())
+        && !mode.equals(Mode.workingMode.addPointToMP.toString())) {
+      multipointPoints = new Vector<>();
       oldMultipoint = null;
     }
   }
-
-  //  public ArrayList getObjects() {
-  //
-  //    ArrayList maps = new ArrayList<HashMap<Node, Integer>>();
-  //    maps.add(newObjects);
-  //    maps.add(editedObjects);
-  //    maps.add(deletedObjects);
-  //    return maps;
-  //  }
 
   void setSidePanel(SidePanelController controller) {
     sidePanel = controller;
   }
 
+  @FXML
   public void initialize() {
-    polylinePoints = new Vector<Double>();
-    multipointPoints = new Vector<Double>();
-    objects = new HashMap<Node, Integer>();
-    newObjects = new HashMap<Node, Integer>();
-    editedObjects = new HashMap<Node, Integer>();
-    deletedObjects = new HashMap<Node, Integer>();
+    polylinePoints = new Vector<>();
+    multipointPoints = new Vector<>();
+    objects = new HashMap<>();
+    newObjects = new HashMap<>();
+    editedObjects = new HashMap<>();
+    deletedObjects = new HashMap<>();
     currentlyEditedDataMPData = new Vector<>();
     currentlyEditedDataPLData = new Vector<>();
     currentlyEditedDataCollectionData = new Vector<>();
+    selectedObject = null;
+    currentlyEditedSpecialSpatialObject = null;
+    oldPolyline = null;
+    oldMultipoint = null;
+    Canvas.getChildren().clear();
   }
 
   private boolean validOperation(double minX, double minY, double maxX, double maxY) {
-    if (minY > 0 && maxY < Canvas.getHeight() && minX > 0 && maxX < Canvas.getWidth()) return true;
-    else return false;
+    return minY > 0 && maxY < Canvas.getHeight() && minX > 0 && maxX < Canvas.getWidth();
   }
 
   private void selectObject(Node object) {
     if (selectedObject != null) selectedObject.setEffect(null);
 
-    if (this.mode.equals(Mode.workingMode.None.toString())) {
-      DropShadow ds = new DropShadow();
-      ds.setOffsetY(4.0f);
-      ds.setOffsetX(4.0f);
-      ds.setColor(Color.BLACK);
-
+    if (mode.equals(Mode.workingMode.None.toString())) {
+      DropShadow ds = new DropShadow(16, Color.RED);
       object.setEffect(ds);
       selectedObject = object;
     }
+
+    sidePanel.refreshAction();
   }
 
   public int getObjectId(Node object) {
@@ -127,14 +137,12 @@ public class CanvasController {
 
   @FXML
   public void CanvasClicked(MouseEvent event) {
-
     if (transactionMode.equals(Mode.transactionMode.removePointFromMP.toString())
         || transactionMode.equals(Mode.transactionMode.removePointFromPL.toString())) return;
-    System.out.println("mode: " + this.mode);
-    Shape s = null;
+    System.out.println("mode: " + mode);
     Integer DB_DEFAULT_ID = -1;
     if (event.getButton() != MouseButton.PRIMARY) return;
-    switch (this.mode) {
+    switch (mode) {
       case "Rect":
         flush_temporal_data();
         if (validOperation(
@@ -178,7 +186,7 @@ public class CanvasController {
             event.getY() - (double) (prefSize),
             event.getX() + (double) (prefSize * 3 * (groupCount - 1)) + prefSize,
             event.getY() + (double) (prefSize))) {
-          Group g = createCollection(event.getX(), event.getY());
+          Group g = createCollection(event.getX(), event.getY(), null);
           Canvas.getChildren().add(g);
           newObjects.put(g, DB_DEFAULT_ID);
         }
@@ -200,11 +208,11 @@ public class CanvasController {
             event.getY() - (double) (pointRadius),
             event.getX() + (double) (pointRadius),
             event.getY() + (double) (pointRadius))) {
-          this.multipointPoints.add(event.getX());
-          this.multipointPoints.add(event.getY());
+          multipointPoints.add(event.getX());
+          multipointPoints.add(event.getY());
           Group g = createMultipoint();
           Canvas.getChildren().add(g);
-          if (!this.mode.equals(Mode.transactionMode.addPointToMP.toString()))
+          if (!mode.equals(Mode.transactionMode.addPointToMP.toString()))
             newObjects.put(g, DB_DEFAULT_ID);
         }
         break;
@@ -228,12 +236,12 @@ public class CanvasController {
             event.getY() - (double) (pointRadius),
             event.getX() + (double) (pointRadius),
             event.getY() + (double) (pointRadius))) {
-          this.polylinePoints.add(event.getX());
-          this.polylinePoints.add(event.getY());
+          polylinePoints.add(event.getX());
+          polylinePoints.add(event.getY());
           Group g = createPolyline();
 
           Canvas.getChildren().add(g);
-          if (!this.mode.equals(Mode.transactionMode.addPointToPL.toString()))
+          if (!mode.equals(Mode.transactionMode.addPointToPL.toString()))
             newObjects.put(g, DB_DEFAULT_ID);
         }
         break;
@@ -245,16 +253,19 @@ public class CanvasController {
   }
 
   private Rectangle createRect(double sceneX, double sceneY) {
-    Rectangle rect =
-        new Rectangle(
-            sceneX - ((double) prefSize / 2), sceneY - ((double) prefSize / 2), prefSize, prefSize);
-    rect.setFill(prefColor);
+    double prefSizeD = prefSize;
+    return createRect(sceneX - (prefSizeD / 2), sceneY - (prefSizeD / 2), prefSizeD);
+  }
+
+  private Rectangle createRect(double sceneX, double sceneY, double width) {
+    Rectangle rect = new Rectangle(sceneX, sceneY, width, width);
+    rect.setFill(COLOR_SPACESHIP);
     rect.setStroke(Color.BLACK);
     rect.setCursor(Cursor.HAND);
     rect.setOnMousePressed(
         (t) -> {
           // REMOVING RECTANGLE
-          if (this.mode.equals(Mode.workingMode.Delete.toString())) {
+          if (mode.equals(Mode.workingMode.Delete.toString())) {
             Canvas.getChildren().remove(rect);
             // check whether object is in DB
             if (objects.containsKey(rect)) deletedObjects.put(rect, objects.get(rect));
@@ -268,9 +279,9 @@ public class CanvasController {
           Rectangle c = (Rectangle) (t.getSource());
           c.toFront();
           selectObject(c);
-          if (this.mode.equals(Mode.workingMode.None.toString())) {
+          if (mode.equals(Mode.workingMode.None.toString())) {
             try {
-              sidePanel.setActiveNode(c, objects.get(c));
+              sidePanel.setActiveNode(c);
             } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
@@ -278,7 +289,7 @@ public class CanvasController {
         });
     rect.setOnMouseDragged(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Move.toString())) {
+          if (mode.equals(Mode.workingMode.Move.toString())) {
             double offsetX = t.getSceneX() - xCord;
             double offsetY = t.getSceneY() - yCord;
 
@@ -297,7 +308,7 @@ public class CanvasController {
               xCord = t.getSceneX();
               yCord = t.getSceneY();
             }
-          } else if (this.mode.equals(Mode.workingMode.Resize.toString())) {
+          } else if (mode.equals(Mode.workingMode.Resize.toString())) {
             double offsetX = t.getSceneX() - xCord;
             double offsetY = t.getSceneY() - yCord;
 
@@ -321,20 +332,17 @@ public class CanvasController {
   }
 
   private Circle createCircle(double sceneX, double sceneY, boolean isPoint) {
-    double radius;
-    if (isPoint) {
-      radius = pointRadius;
-    } else {
-      radius = prefSize;
-    }
+    return createCircle(sceneX, sceneY, isPoint, isPoint ? pointRadius : prefSize);
+  }
 
-    Circle circle = new Circle(sceneX, sceneY, radius, prefColor);
+  private Circle createCircle(double sceneX, double sceneY, boolean isPoint, double radius) {
+    Circle circle = new Circle(sceneX, sceneY, radius, isPoint ? COLOR_STAR : COLOR_PLANET);
     circle.setStroke(Color.BLACK);
     circle.setCursor(Cursor.HAND);
 
     circle.setOnMousePressed(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Delete.toString())) {
+          if (mode.equals(Mode.workingMode.Delete.toString())) {
             Canvas.getChildren().remove(circle);
             // check whether object is in DB
             if (objects.containsKey(circle)) deletedObjects.put(circle, objects.get(circle));
@@ -348,9 +356,9 @@ public class CanvasController {
           Circle c = (Circle) (t.getSource());
           c.toFront();
           selectObject(c);
-          if (this.mode.equals(Mode.workingMode.None.toString())) {
+          if (mode.equals(Mode.workingMode.None.toString())) {
             try {
-              sidePanel.setActiveNode(c, objects.get(c));
+              sidePanel.setActiveNode(c);
             } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
@@ -358,7 +366,7 @@ public class CanvasController {
         });
     circle.setOnMouseDragged(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Move.toString())) {
+          if (mode.equals(Mode.workingMode.Move.toString())) {
 
             double offsetX = t.getSceneX() - xCord;
             double offsetY = t.getSceneY() - yCord;
@@ -378,7 +386,7 @@ public class CanvasController {
               xCord = t.getSceneX();
               yCord = t.getSceneY();
             }
-          } else if (this.mode.equals(Mode.workingMode.Resize.toString())) {
+          } else if (mode.equals(Mode.workingMode.Resize.toString())) {
             if (isPoint) return;
             double offset = t.getSceneX() - xCord;
 
@@ -400,13 +408,24 @@ public class CanvasController {
     return circle;
   }
 
-  private Group createCollection(double sceneX, double sceneY) {
-
+  private Group createCollection(Double sceneX, Double sceneY, Circle[] circles) {
     Group group = new Group();
+    double prefSizeD = prefSize;
+    double radius = prefSizeD / 2;
+    double stride = prefSizeD / 2 * 3;
 
     for (int i = 0; i < groupCount; i++) {
-
-      Circle circle = new Circle(sceneX + prefSize * 3 * i, sceneY, prefSize, prefColor);
+      Circle circle;
+      if (circles != null) {
+        if (circles.length > i) {
+          circle = circles[i];
+        } else {
+          break;
+        }
+      } else {
+        circle = new Circle(sceneX + stride * i, sceneY, radius);
+      }
+      circle.setFill(COLOR_METEORIT);
       circle.setStroke(Color.BLACK);
       circle.setCursor(Cursor.HAND);
 
@@ -451,7 +470,7 @@ public class CanvasController {
       circle.setOnContextMenuRequested(
           event -> {
             int index = 0;
-            Vector<Integer> invisible = new Vector<Integer>();
+            Vector<Integer> invisible = new Vector<>();
             for (Node n : group.getChildren()) {
               if (!n.isVisible()) invisible.add(index);
               index++;
@@ -494,7 +513,7 @@ public class CanvasController {
     }
     group.setOnMousePressed(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Delete.toString())) {
+          if (mode.equals(Mode.workingMode.Delete.toString())) {
             Canvas.getChildren().remove(group);
             if (objects.containsKey(group)) deletedObjects.put(group, objects.get(group));
             else newObjects.remove(group);
@@ -506,9 +525,9 @@ public class CanvasController {
           Group c = (Group) (t.getSource());
           c.toFront();
           selectObject(c);
-          if (this.mode.equals(Mode.workingMode.None.toString())) {
+          if (mode.equals(Mode.workingMode.None.toString())) {
             try {
-              sidePanel.setActiveNode(c, objects.get(c));
+              sidePanel.setActiveNode(c);
             } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
@@ -516,7 +535,7 @@ public class CanvasController {
         });
     group.setOnMouseDragged(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Move.toString())) {
+          if (mode.equals(Mode.workingMode.Move.toString())) {
 
             double offsetX = t.getSceneX() - xCord;
             double offsetY = t.getSceneY() - yCord;
@@ -539,7 +558,7 @@ public class CanvasController {
               xCord = t.getSceneX();
               yCord = t.getSceneY();
             }
-          } else if (this.mode.equals(Mode.workingMode.Resize.toString())) {
+          } else if (mode.equals(Mode.workingMode.Resize.toString())) {
 
             double offset = t.getSceneX() - xCord;
 
@@ -564,11 +583,11 @@ public class CanvasController {
   }
 
   private Group createPolyline() {
-
     Group group = new Group();
     Polyline p = new Polyline(pointsDataToArray(polylinePoints));
     p.setCursor(Cursor.HAND);
     p.setStrokeWidth(2.0);
+    p.setStroke(COLOR_SATELLITE_EDGE);
     group.getChildren().add(p);
 
     double[] arr = pointsDataToArray(polylinePoints);
@@ -579,7 +598,7 @@ public class CanvasController {
 
     group.setOnMousePressed(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Delete.toString())) {
+          if (mode.equals(Mode.workingMode.Delete.toString())) {
             Canvas.getChildren().remove(group);
             if (objects.containsKey(group)) deletedObjects.put(group, objects.get(group));
             else newObjects.remove(group);
@@ -591,9 +610,9 @@ public class CanvasController {
           Group c = (Group) (t.getSource());
           c.toFront();
           selectObject(c);
-          if (this.mode.equals(Mode.workingMode.None.toString())) {
+          if (mode.equals(Mode.workingMode.None.toString())) {
             try {
-              sidePanel.setActiveNode(c, objects.get(c));
+              sidePanel.setActiveNode(c);
             } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
@@ -601,7 +620,7 @@ public class CanvasController {
         });
     group.setOnMouseDragged(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Move.toString())) {
+          if (mode.equals(Mode.workingMode.Move.toString())) {
 
             double offsetX = t.getSceneX() - xCord;
             double offsetY = t.getSceneY() - yCord;
@@ -643,7 +662,7 @@ public class CanvasController {
   }
 
   private Circle createNewCircle(double x, double y, Group group) {
-    Circle c = new Circle(x, y, pointRadius, prefColor);
+    Circle c = new Circle(x, y, pointRadius, COLOR_SATELLITE);
     c.setStroke(Color.BLACK);
     c.setCursor(Cursor.HAND);
 
@@ -702,24 +721,19 @@ public class CanvasController {
           oldPolyline = group;
           mode = Mode.workingMode.addPointToPL.toString();
           polylinePoints = new Vector<>();
-          polylinePoints.addAll(p1.getPoints());
+          polylinePoints.addAll(Objects.requireNonNull(p1).getPoints());
         });
 
     c.setOnContextMenuRequested(
-        new EventHandler<ContextMenuEvent>() {
-
-          @Override
-          public void handle(ContextMenuEvent event) {
-            if (mode.equals(Mode.workingMode.Polyline.toString())
-                || mode.equals(Mode.workingMode.addPointToPL.toString()))
-              contextMenu.show(c, event.getScreenX(), event.getScreenY());
-          }
+        event -> {
+          if (mode.equals(Mode.workingMode.Polyline.toString())
+              || mode.equals(Mode.workingMode.addPointToPL.toString()))
+            contextMenu.show(c, event.getScreenX(), event.getScreenY());
         });
     return c;
   }
 
   private Group createMultipoint() {
-
     Group group = new Group();
     double[] arr = pointsDataToArray(multipointPoints);
     for (int i = 0; i < arr.length; i += 2) {
@@ -729,7 +743,7 @@ public class CanvasController {
 
     group.setOnMousePressed(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Delete.toString())) {
+          if (mode.equals(Mode.workingMode.Delete.toString())) {
             Canvas.getChildren().remove(group);
             if (objects.containsKey(group)) deletedObjects.put(group, objects.get(group));
             else newObjects.remove(group);
@@ -741,9 +755,9 @@ public class CanvasController {
           Group c = (Group) (t.getSource());
           c.toFront();
           selectObject(c);
-          if (this.mode.equals(Mode.workingMode.None.toString())) {
+          if (mode.equals(Mode.workingMode.None.toString())) {
             try {
-              sidePanel.setActiveNode(c, objects.get(c));
+              sidePanel.setActiveNode(c);
             } catch (SQLException | IOException | GeneralDB.NotFoundException e) {
               e.printStackTrace();
             }
@@ -751,7 +765,7 @@ public class CanvasController {
         });
     group.setOnMouseDragged(
         (t) -> {
-          if (this.mode.equals(Mode.workingMode.Move.toString())) {
+          if (mode.equals(Mode.workingMode.Move.toString())) {
 
             double offsetX = t.getSceneX() - xCord;
             double offsetY = t.getSceneY() - yCord;
@@ -780,7 +794,7 @@ public class CanvasController {
   }
 
   private Circle createNewMCircle(double x, double y, Group group) {
-    Circle c = new Circle(x, y, pointRadius, prefColor);
+    Circle c = new Circle(x, y, pointRadius, COLOR_CONSTELLATION);
     c.setCursor(Cursor.HAND);
     c.setStroke(Color.BLACK);
 
@@ -901,33 +915,186 @@ public class CanvasController {
       }
 
       // Saving changes to DB
-      sidePanel.saveStateToDb(newObjects, editedObjects, deletedObjects, this.mode);
+      sidePanel.saveStateToDb(newObjects, editedObjects, deletedObjects, mode);
       // adding new objects to local map of saved DB objects
       for (HashMap.Entry<Node, Integer> entry : newObjects.entrySet()) {
         objects.put(entry.getKey(), entry.getValue());
       }
       // create new instances of maps
-      newObjects = new HashMap<Node, Integer>();
-      editedObjects = new HashMap<Node, Integer>();
-      deletedObjects = new HashMap<Node, Integer>();
+      newObjects = new HashMap<>();
+      editedObjects = new HashMap<>();
+      deletedObjects = new HashMap<>();
     }
   }
 
+  @FXML
   public void changeMode() throws Exception {
-
-    //    currentlyEditedSpecialSpatialObject = null;
     saveChange();
     saveState();
     currentlyEditedSpecialSpatialObject = null;
+    sidePanel.setActiveNode(null);
 
-    ToggleButton selected = (ToggleButton) this.ToggleGroup1.getSelectedToggle();
+    ToggleButton selected = (ToggleButton) ToggleGroup1.getSelectedToggle();
     flush_temporal_data();
 
     if (selected == null) {
-      this.mode = Mode.workingMode.None.toString();
+      mode = Mode.workingMode.None.toString();
     } else{
-      this.mode = selected.getText();
+      mode = selected.getId();
       selectObject(null);
     }
+
+    transactionMode = Mode.transactionMode.None.toString();
+
+    sidePanel.refreshAction();
+  }
+
+  public void fillCanvasFromDb() {
+    try (Connection conn = connection.ods.getConnection()) {
+      try (PreparedStatement ps = conn.prepareStatement(
+          "SELECT O_ID, O_TYPE, IMAGE_ID, GEOMETRY FROM VILLAGE"
+      )) {
+        try (OracleResultSet rs = (OracleResultSet) ps.executeQuery()) {
+          while (rs.next()) {
+            int id = rs.getInt("O_ID");
+            JGeometry geometry = JGeometry.loadJS((Struct) rs.getObject("GEOMETRY"));
+            double[] ords;
+            double x, y, p1y, p2x, p3y, r2, r, x2;
+            Node node = null;
+
+            switch (rs.getString("O_TYPE")) {
+              case "spaceships":
+                ords = geometry.getOrdinatesArray();
+                x = ords[0];
+                y = SpatialObject.translateYCordForDb(ords[1]);
+                x2 = ords[2];
+                double width = Math.abs(x2 - x);
+
+                Rectangle spaceship = createRect(x, y, width);
+                node = spaceship;
+                Canvas.getChildren().add(spaceship);
+                objects.put(spaceship, id);
+                editedObjects.put(spaceship, id);
+                break;
+
+              case "planets":
+                ords = geometry.getOrdinatesArray();
+                p1y = ords[1];
+                p2x = ords[2];
+                p3y = ords[5];
+                r2 = Math.abs(p3y - p1y);
+                r = r2 / 2;
+                x = Math.abs(p2x - r2) + r;
+                y = Math.abs(SpatialObject.translateYCordForDb(p1y) - r);
+
+                Circle planet = createCircle(x, y, false, r);
+                node = planet;
+                Canvas.getChildren().add(planet);
+                objects.put(planet, id);
+                editedObjects.put(planet, id);
+                break;
+
+              case "stars":
+                double[] point = geometry.getPoint();
+                x = point[0];
+                y = SpatialObject.translateYCordForDb(point[1]);
+
+                Circle star = createCircle(x, y, true);
+                node = star;
+                Canvas.getChildren().add(star);
+                objects.put(star, id);
+                editedObjects.put(star, id);
+                break;
+
+              case "meteorites":
+                ords = geometry.getOrdinatesArray();
+                Circle[] circles = new Circle[ords.length / 6];
+                for (int i = 0; i < ords.length; i += 6) {
+                  p1y = ords[i + 1];
+                  p2x = ords[i + 2];
+                  p3y = ords[i + 5];
+                  r2 = Math.abs(p3y - p1y);
+                  r = r2 / 2;
+                  x = Math.abs(p2x - r2) + r;
+                  y = Math.abs(SpatialObject.translateYCordForDb(p1y) - r);
+
+                  circles[i / 6] = new Circle(x, y, r);
+                }
+
+                Group meteorites = createCollection(null, null, circles);
+                node = meteorites;
+                Canvas.getChildren().add(meteorites);
+                objects.put(meteorites, id);
+                editedObjects.put(meteorites, id);
+                break;
+
+              case "constellations":
+                multipointPoints = new Vector<>();
+                oldMultipoint = null;
+
+                ords = geometry.getOrdinatesArray();
+                for (int i = 0; i < ords.length; i += 2) {
+                  multipointPoints.add(ords[i]);
+                  multipointPoints.add(SpatialObject.translateYCordForDb(ords[i + 1]));
+                }
+
+                Group constellation = createMultipoint();
+                node = constellation;
+                Canvas.getChildren().add(constellation);
+                objects.put(constellation, id);
+                editedObjects.put(constellation, id);
+                break;
+
+              case "satellites":
+                polylinePoints = new Vector<>();
+                oldPolyline = null;
+
+                ords = geometry.getOrdinatesArray();
+                for (int i = 0; i < ords.length; i += 2) {
+                  polylinePoints.add(ords[i]);
+                  polylinePoints.add(SpatialObject.translateYCordForDb(ords[i + 1]));
+                }
+
+                Group satellite = createPolyline();
+                node = satellite;
+                Canvas.getChildren().add(satellite);
+                objects.put(satellite, id);
+                editedObjects.put(satellite, id);
+                break;
+            }
+
+            if (node != null) {
+              int imageId = rs.getInt("IMAGE_ID");
+              if (imageId != 0) {
+                sidePanel.addObject(node, imageId);
+              }
+            }
+          }
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    } finally {
+      flush_temporal_data();
+    }
+  }
+
+  @FXML
+  public void refresh() {
+    Toggle toggle = ToggleGroup1.getSelectedToggle();
+    if (toggle != null) {
+      toggle.setSelected(false);
+    }
+
+    try {
+      changeMode();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    initialize();
+    InitDB.initSchema(connection.ods);
+
+    fillCanvasFromDb();
   }
 }

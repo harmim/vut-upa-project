@@ -1,44 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.control.ToggleGroup?>
-<?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="upa.openjfx.CanvasController">
-    <children>
-        <VBox>
-            <children>
-                <ToolBar maxHeight="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="40.0" prefWidth="200.0">
-                    <items>
-                        <HBox spacing="5.0">
-                            <children>
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" selected="true" text="Move">
-                                    <toggleGroup>
-                                        <ToggleGroup fx:id="ToggleGroup1" />
-                                    </toggleGroup>
-                                </ToggleButton>
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" text="Delete" toggleGroup="$ToggleGroup1" />
-                        <ToggleButton layoutX="68.0" layoutY="10.0" mnemonicParsing="false" onAction="#changeMode" text="Resize" toggleGroup="$ToggleGroup1" />
-                                <Region prefHeight="200.0" prefWidth="90.0" HBox.hgrow="ALWAYS" />
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" text="Rect" toggleGroup="$ToggleGroup1" />
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" text="Circle" toggleGroup="$ToggleGroup1" />
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" text="Point" toggleGroup="$ToggleGroup1" />
-                        <Region maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="80.0" HBox.hgrow="ALWAYS" />
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" text="Collection" toggleGroup="$ToggleGroup1" />
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" text="Multipoint" toggleGroup="$ToggleGroup1" />
-                                <ToggleButton mnemonicParsing="false" onAction="#changeMode" text="Polyline" toggleGroup="$ToggleGroup1" />
-                            </children>
-                        </HBox>
-                    </items>
-                </ToolBar>
-                <AnchorPane fx:id="Canvas" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#CanvasClicked" prefHeight="600.0" prefWidth="800.0">
+<AnchorPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="upa.openjfx.CanvasController">
+    <VBox>
+        <ToolBar maxHeight="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="40.0" prefWidth="200.0">
+            <HBox spacing="5.0">
+                <Button id="buttonRefresh" onAction="#refresh" mnemonicParsing="false" prefHeight="27.0" prefWidth="27.0" />
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Move" text="Move">
+                    <toggleGroup>
+                        <ToggleGroup fx:id="ToggleGroup1" />
+                    </toggleGroup>
+                </ToggleButton>
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Delete" text="Delete" toggleGroup="$ToggleGroup1" />
+                <ToggleButton layoutX="68.0" layoutY="10.0" mnemonicParsing="false" onAction="#changeMode" id="Resize" text="Resize" toggleGroup="$ToggleGroup1" />
+                <Region prefHeight="28.0" prefWidth="50.0" HBox.hgrow="ALWAYS" />
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Rect" text="Spaceships" toggleGroup="$ToggleGroup1" />
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Circle" text="Planets" toggleGroup="$ToggleGroup1" />
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Point" text="Stars" toggleGroup="$ToggleGroup1" />
+                <Region maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="40.0" HBox.hgrow="ALWAYS" />
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Collection" text="Meteorites" toggleGroup="$ToggleGroup1" />
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Multipoint" text="Constellations" toggleGroup="$ToggleGroup1" />
+                <ToggleButton mnemonicParsing="false" onAction="#changeMode" id="Polyline" text="Satellites" toggleGroup="$ToggleGroup1" />
+            </HBox>
+        </ToolBar>
+        <AnchorPane id="canvas" fx:id="Canvas" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#CanvasClicked" prefHeight="600.0" prefWidth="800.0">
 
-                </AnchorPane>
-            </children>
-        </VBox>
-    </children>
+        </AnchorPane>
+    </VBox>
 </AnchorPane>

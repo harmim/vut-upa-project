@@ -3,8 +3,6 @@ package upa.db.spatial;
 import oracle.spatial.geometry.JGeometry;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.awt.*;
-import java.security.spec.RSAOtherPrimeInfo;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +14,7 @@ public class CircleCollection extends Collection {
   private static final int SDO_ETYPE = 1003;
   // circle type described by three distinct non-colinear points, all on the circumference of the
   private static final int SDO_INTERPRETATION = 4;
-  private static final double CIRCLE_SEGMENT_LENGTH = 1.5;
+  public static final double CIRCLE_SEGMENT_LENGTH = 1.5;
   private static final int SDO_ELEM_SIZE = 3;
   private static final int SDO_ORD_SIZE = 6;
   private static ArrayList<Double> sdo_points = new ArrayList<>();

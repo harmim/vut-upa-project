@@ -120,4 +120,8 @@ public class SpatialObject extends GeneralDB {
     delete_object(conn, SQL_DELETE_OBJECT, o_id);
     conn.close();
   }
+
+  public static double translateYCordForDb(double y) {
+    return 600.0 - y;
+  }
 }
