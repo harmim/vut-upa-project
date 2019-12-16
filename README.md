@@ -10,9 +10,9 @@
 - JavaFX 13
 
 ### Překlad řešení
-Projekt je možné přeložit na systému Unix, repektive na Windows, skriptem 
+Projekt je možné přeložit na systému Unix, respektive na Windows, skriptem 
 `build.sh`, respektive skriptem `build.bat`. Pro případné odstranění souborů 
-vytvořených překladem lze na systému Unix, respektive na Winsows, použít skript 
+vytvořených překladem lze na systému Unix, respektive na Windows, použít skript 
 `clean.sh`, respektive skript `clean.bat`.
 
 ### Spuštění programu
